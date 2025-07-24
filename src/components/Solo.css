@@ -1,0 +1,1082 @@
+/* 🎨 GENEL TASARIM DEĞİŞKENLERİ */
+:root {
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --container-max: 1200px;
+  --touch-target: 44px;
+}
+
+/* 🌍 GENEL SAYFA STİLLERİ */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #1a1a3e;
+  color: #ccc9dc;
+}
+
+.solo-container {
+  max-width: var(--container-max);
+  margin: auto;
+  padding: var(--space-md);
+}
+
+/* 📋 ANA SAYFA - LİSTE GÖRÜNÜMÜ */
+.add-habit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--space-sm);
+  font-size: var(--text-base);
+  font-weight: bold;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  margin-bottom: var(--space-lg);
+  min-height: var(--touch-target);
+}
+
+.habits-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.habit-item {
+  background: #2b2b4a;
+  border-radius: 1rem;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.habit-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.habit-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.habit-icon {
+  font-size: 1.5rem;
+}
+
+.habit-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.habit-title {
+  color: white;
+  font-weight: bold;
+  font-size: var(--text-base);
+}
+
+.habit-frequency {
+  font-size: var(--text-xs);
+  color: #a0a0b8;
+}
+
+.habit-stats-row {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.difficulty-badge {
+  padding: 0.25rem 0.75rem;
+  font-size: var(--text-xs);
+  border-radius: 9999px;
+  font-weight: bold;
+  background: rgba(255,255,255,0.1);
+  color: #feca57;
+}
+
+.habit-points {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255,255,255,0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.habit-points .points-icon {
+  color: #43e97b;
+  font-size: var(--text-base);
+}
+
+.habit-points .points-value {
+  font-size: var(--text-sm);
+}
+
+.habit-streak {
+  font-size: var(--text-sm);
+  color: orange;
+}
+
+.weekly-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xs);
+}
+
+.day-box {
+  background: rgba(255,255,255,0.05);
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  font-size: var(--text-xs);
+  min-height: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.day-box.today {
+  border: 2px solid #667eea;
+}
+
+.day-box.completed {
+  background: rgba(67, 233, 123, 0.2);
+  color: #43e97b;
+}
+
+/* 🔸 MODAL VE FORM STİLLERİ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-md);
+  backdrop-filter: blur(4px);
+}
+
+.habit-form {
+  background: linear-gradient(145deg, #2b2b4a, #1e1e3f);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 95vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.habit-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.habit-form::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.habit-form::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.5);
+  border-radius: 3px;
+}
+
+.habit-form h3 {
+  color: white;
+  margin: 0 0 2rem 0;
+  font-size: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Form input'ları */
+.habit-form input[type="text"] {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.habit-form input[type="text"]:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.habit-form input[type="text"]::placeholder {
+  color: #9ca3af;
+}
+
+/* Form bölümleri */
+.habit-form .icon-selector,
+.habit-form .color-selector,
+.habit-form .difficulty-selector,
+.habit-form .frequency-selector,
+.habit-form .day-picker,
+.habit-form .description-selector {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Form bölüm başlıkları */
+.habit-form .icon-selector > p,
+.habit-form .color-selector > p,
+.habit-form .difficulty-selector > p,
+.habit-form .frequency-selector > p,
+.habit-form .day-picker > p,
+.habit-form .description-selector > p {
+  color: white;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.habit-form .icon-selector > p::before,
+.habit-form .color-selector > p::before,
+.habit-form .difficulty-selector > p::before,
+.habit-form .frequency-selector > p::before,
+.habit-form .day-picker > p::before,
+.habit-form .description-selector > p::before {
+  content: "●";
+  color: #667eea;
+  font-size: 0.8rem;
+}
+
+/* İkon Grid */
+.habit-form .icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  gap: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.75rem;
+}
+
+.habit-form .icon-option {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+
+.habit-form .icon-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+}
+
+.habit-form .icon-option.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.25);
+  box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Renk Grid */
+.habit-form .color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.habit-form .color-option {
+  width: 100%;
+  height: 50px;
+  border-radius: 0.75rem;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.habit-form .color-option::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.habit-form .color-option:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.habit-form .color-option.selected {
+  border-color: white;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.habit-form .color-option.selected::before {
+  width: 15px;
+  height: 15px;
+}
+
+/* Zorluk Seçici */
+.habit-form .difficulty-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.habit-form .difficulty-option {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.habit-form .difficulty-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.habit-form .difficulty-option.selected {
+  border-color: var(--difficulty-color, #667eea);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+}
+
+.habit-form .difficulty-label {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.habit-form .difficulty-points {
+  color: var(--difficulty-color, #43e97b);
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+}
+
+/* Frekans Select */
+.habit-form select {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.habit-form select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.habit-form select option {
+  background: #2b2b4a;
+  color: white;
+  padding: 0.5rem;
+}
+
+/* Gün Seçici */
+.habit-form .day-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.habit-form .day-picker-option {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  padding: 1rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.habit-form .day-picker-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.habit-form .day-picker-option.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.2);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.25);
+}
+
+.habit-form .day-full-name {
+  display: block;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  position: relative;
+  z-index: 1;
+}
+
+.habit-form .day-short-name {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.habit-form .day-picker-option.selected .day-full-name {
+  color: #667eea;
+}
+
+.habit-form .day-picker-option.selected .day-short-name {
+  color: #a78bfa;
+}
+
+.habit-form .selected-days-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.habit-form .selected-days-preview {
+  color: #43e97b;
+  font-weight: 600;
+  background: rgba(67, 233, 123, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+}
+
+/* Textarea */
+.habit-form textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 0.9rem;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.habit-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.habit-form textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Form Butonları */
+.form-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-buttons button {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-buttons button:first-child {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-buttons button:first-child:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  border: 2px solid transparent !important;
+}
+
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* Animasyon */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Diğer Modal'lar */
+.confirm-modal,
+.description-modal {
+  background: #2b2b4a;
+  border-radius: 1rem;
+  padding: var(--space-lg);
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.confirm-modal p,
+.description-modal h3 {
+  color: white;
+  margin: 0 0 var(--space-lg) 0;
+}
+
+.confirm-buttons,
+.description-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+.confirm-buttons button,
+.description-actions button {
+  padding: var(--space-sm) var(--space-lg);
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-confirm {
+  background: #ff6b6b !important;
+  color: white !important;
+}
+
+.update-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+}
+
+.description-modal textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-sm);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  color: white;
+  margin-bottom: var(--space-md);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.description-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-md);
+}
+
+/* 📱 RESPONSIVE TASARIM */
+
+/* 📱 TELEFON (2400x1080 px) - Landscape mode */
+@media (max-width: 2400px) and (min-width: 1081px) and (orientation: landscape) {
+  :root {
+    --space-xs: 0.6rem;
+    --space-sm: 0.85rem;
+    --space-md: 1.2rem;
+    --space-lg: 1.8rem;
+    --text-xs: 0.85rem;
+    --text-sm: 1rem;
+    --text-base: 1.15rem;
+    --text-lg: 1.3rem;
+    --text-xl: 1.5rem;
+    --container-max: 2200px;
+  }
+
+  .solo-container {
+    padding: var(--space-lg);
+    max-width: var(--container-max);
+  }
+
+  .habit-item {
+    padding: var(--space-lg);
+    border-radius: 1.2rem;
+  }
+
+  .habit-icon {
+    font-size: 1.8rem;
+  }
+
+  .weekly-progress {
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .day-box {
+    padding: 0.8rem;
+    min-height: 50px;
+    border-radius: 0.8rem;
+    font-size: var(--text-sm);
+  }
+
+  .add-habit-btn {
+    padding: var(--space-md);
+    border-radius: 1rem;
+    min-height: 60px;
+    max-width: 900px;
+    margin: 0 auto var(--space-lg) auto;
+  }
+
+  .habit-stats-row {
+    gap: var(--space-md);
+  }
+}
+
+/* 📱 TELEFON (Genel mobil) */
+@media (max-width: 1080px) {
+  :root {
+    --space-xs: 0.4rem;
+    --space-sm: 0.6rem;
+    --space-md: 0.8rem;
+    --space-lg: 1.2rem;
+    --text-xs: 0.7rem;
+    --text-sm: 0.8rem;
+    --text-base: 0.9rem;
+    --text-lg: 1rem;
+    --text-xl: 1.1rem;
+    --container-max: 100%;
+  }
+
+  .solo-container {
+    padding: var(--space-sm);
+  }
+
+  .habit-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .habit-stats-row {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .weekly-progress {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.3rem;
+  }
+
+  .day-box {
+    padding: 0.3rem;
+    min-height: 40px;
+    font-size: 0.7rem;
+  }
+
+  .habit-item {
+    padding: var(--space-sm);
+    gap: var(--space-xs);
+  }
+
+  .habit-icon {
+    font-size: 1.3rem;
+  }
+
+  .add-habit-btn {
+    padding: var(--space-sm);
+    font-size: var(--text-sm);
+    min-height: 48px;
+  }
+
+  .difficulty-badge,
+  .habit-points {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  .habit-points .points-icon {
+    font-size: 0.8rem;
+  }
+
+  .habit-points .points-value {
+    font-size: 0.7rem;
+  }
+
+  .habit-streak {
+    font-size: 0.75rem;
+  }
+
+  /* Form için mobil düzenlemeler */
+  .habit-form {
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
+    padding: 1.5rem;
+  }
+  
+  .habit-form .day-picker-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .habit-form .icon-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* 📱 TABLET (1440x2960 px) - Portrait mode */
+@media (min-width: 1081px) and (max-width: 1440px) and (orientation: portrait) {
+  :root {
+    --space-xs: 0.6rem;
+    --space-sm: 0.9rem;
+    --space-md: 1.2rem;
+    --space-lg: 1.8rem;
+    --text-xs: 0.85rem;
+    --text-sm: 1rem;
+    --text-base: 1.15rem;
+    --text-lg: 1.3rem;
+    --text-xl: 1.5rem;
+    --container-max: 1300px;
+  }
+
+  .solo-container {
+    padding: var(--space-lg);
+    max-width: var(--container-max);
+  }
+
+  .habit-item {
+    padding: var(--space-lg);
+    border-radius: 1.2rem;
+  }
+
+  .habit-icon {
+    font-size: 1.8rem;
+  }
+
+  .weekly-progress {
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .day-box {
+    padding: 0.8rem;
+    min-height: 48px;
+    border-radius: 0.8rem;
+    font-size: var(--text-sm);
+  }
+
+  .add-habit-btn {
+    padding: var(--space-md);
+    border-radius: 1rem;
+    min-height: 56px;
+    max-width: 700px;
+    margin: 0 auto var(--space-lg) auto;
+  }
+
+  .habit-stats-row {
+    gap: var(--space-md);
+  }
+}
+
+/* 📱 TABLET (Landscape mode) */
+@media (min-width: 1081px) and (max-width: 1440px) and (orientation: landscape) {
+  .weekly-progress {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .solo-container {
+    padding: var(--space-md) var(--space-lg);
+    max-width: 1300px;
+  }
+
+  .add-habit-btn {
+    max-width: 800px;
+    margin: 0 auto var(--space-lg) auto;
+  }
+}
+
+/* 💻 PC (1920x1200 px ve üzeri) */
+@media (min-width: 1441px) {
+  :root {
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --container-max: 1400px;
+  }
+
+  .solo-container {
+    padding: var(--space-lg);
+    max-width: var(--container-max);
+  }
+
+  .weekly-progress {
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .day-box {
+    padding: 0.75rem;
+    min-height: 48px;
+    border-radius: 0.75rem;
+    font-size: var(--text-sm);
+  }
+
+  .habit-item {
+    padding: var(--space-lg);
+    border-radius: 1.25rem;
+  }
+
+  .habit-header {
+    align-items: center;
+  }
+
+  .habit-stats-row {
+    gap: var(--space-md);
+    flex-wrap: nowrap;
+  }
+
+  .add-habit-btn {
+    min-height: 52px;
+    max-width: 600px;
+    margin: 0 auto var(--space-lg) auto;
+  }
+
+  /* PC'de hover efektleri */
+  .add-habit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .habit-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+  }
+
+  .day-box:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+    transition: all 0.2s ease;
+  }
+
+  .day-box.completed:hover {
+    background: rgba(67, 233, 123, 0.3);
+    transform: scale(1.05);
+  }
+
+  .day-box.today:hover {
+    border-color: #8b9bff;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  }
+}
+
+/* 📱 Çok küçük ekranlar için (320px ve altı) */
+@media (max-width: 320px) {
+  :root {
+    --space-xs: 0.3rem;
+    --space-sm: 0.5rem;
+    --space-md: 0.7rem;
+    --space-lg: 1rem;
+    --text-xs: 0.65rem;
+    --text-sm: 0.75rem;
+    --text-base: 0.85rem;
+    --text-lg: 0.9rem;
+    --text-xl: 1rem;
+  }
+
+  .weekly-progress {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.2rem;
+  }
+
+  .habit-item {
+    padding: var(--space-sm);
+  }
+
+  .day-box {
+    padding: 0.2rem;
+    min-height: 32px;
+    font-size: 0.6rem;
+  }
+}
+
+/* 📱 Mobil form düzenlemeleri */
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .habit-form {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .habit-form .day-picker-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+  }
+  
+  .form-buttons button {
+    width: 100%;
+  }
+}
+
+/* 📱 Yatay mod optimizasyonu */
+@media (max-height: 500px) and (orientation: landscape) {
+  .solo-container {
+    padding: var(--space-sm);
+  }
+
+  .add-habit-btn {
+    margin-bottom: var(--space-sm);
+  }
+
+  .habits-list {
+    gap: var(--space-sm);
+  }
+
+  .habit-item {
+    padding: var(--space-sm);
+  }
+}
+
+/* 📱 Dokunmatik hedefler için minimum boyutlar */
+@media (hover: none) and (pointer: coarse) {
+  .add-habit-btn,
+  .day-box {
+    min-height: var(--touch-target);
+    min-width: var(--touch-target);
+  }
+}
+
+/* 📱 Yüksek DPI ekranlar için */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .habit-item {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 📱 Accessibility - Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .day-box,
+  .add-habit-btn,
+  .habit-item {
+    transition: none;
+  }
+}
+
+/* 📱 Dark mode uyumluluğu */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0f0f23;
+  }
+
+  .habit-item {
+    background: #1a1a35;
+  }
+
+  .day-box {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
