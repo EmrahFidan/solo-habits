@@ -1,0 +1,161 @@
+.error-boundary {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0616 0%, #1a1a3e 50%, #16213e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #ccc9dc;
+}
+
+.error-container {
+  max-width: 600px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.error-title {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.error-description {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  line-height: 1.6;
+  color: rgba(204, 201, 220, 0.8);
+}
+
+.error-details {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  text-align: left;
+  border-left: 4px solid #ff6b6b;
+}
+
+.error-details h3 {
+  color: #ff6b6b;
+  margin-bottom: 15px;
+}
+
+.error-message {
+  margin-bottom: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.error-stack {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+.error-stack pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: rgba(204, 201, 220, 0.7);
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 30px 0;
+}
+
+.error-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.error-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.error-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.error-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(204, 201, 220, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.error-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.error-id {
+  margin: 20px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: rgba(204, 201, 220, 0.5);
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+.error-footer {
+  margin-top: 30px;
+  font-size: 0.9rem;
+  color: rgba(204, 201, 220, 0.6);
+}
+
+.error-footer a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.error-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .error-container {
+    padding: 30px 20px;
+    margin: 10px;
+  }
+  
+  .error-title {
+    font-size: 1.5rem;
+  }
+  
+  .error-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .error-btn {
+    width: 100%;
+    max-width: 250px;
+  }
+}

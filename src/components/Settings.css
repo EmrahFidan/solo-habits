@@ -1695,6 +1695,61 @@ input:checked + .slider:hover {
   background: rgba(102, 126, 234, 0.5);
 }
 
+/* ==========================================================================
+   TIME SELECT DROPDOWN STYLES
+   ========================================================================== */
+
+.time-select-dropdown {
+  background: linear-gradient(145deg, rgba(25, 28, 35, 0.95), rgba(35, 38, 45, 0.9));
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  border-radius: var(--radius-lg, 12px);
+  color: var(--text-primary, #ffffff);
+  padding: clamp(0.75rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.25rem);
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  text-align: center;
+  min-width: clamp(120px, 20vw, 160px);
+  max-width: 100%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.time-select-dropdown:hover {
+  background: linear-gradient(145deg, rgba(30, 33, 40, 0.98), rgba(40, 43, 50, 0.95));
+  border-color: rgba(102, 126, 234, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    0 8px 25px rgba(102, 126, 234, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.time-select-dropdown:focus {
+  outline: none;
+  border-color: rgba(102, 126, 234, 0.8);
+  box-shadow: 
+    0 0 0 3px rgba(102, 126, 234, 0.25),
+    0 6px 20px rgba(102, 126, 234, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.time-select-dropdown option {
+  background: rgba(25, 28, 35, 0.95);
+  color: var(--text-primary, #ffffff);
+  padding: 0.5rem;
+  font-size: 0.875rem;
+}
+
 /* Deprecated select styles for notification times - keeping for fallback */
 .notification-times .time-picker select {
   background: rgba(20, 20, 20, 0.8);

@@ -9,6 +9,9 @@ body {
   color: #ccc9dc;
 }
 
+/* Import responsive styles */
+@import url('./styles/responsive.css');
+
 .app {
   min-height: 100vh;
   background: linear-gradient(135deg, #0a0616 0%, #1a1a3e 50%, #16213e 100%);

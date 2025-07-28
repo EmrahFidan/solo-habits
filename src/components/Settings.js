@@ -8,49 +8,54 @@ function Settings({ onLogout }) {
     dayStartTime: "00:00",
     notifications: {
       enabled: true,
-      times: ["07:00", "16:00", "23:00"]
-    }
+      times: ["07:00", "16:00", "23:00"],
+    },
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [notificationPermission, setNotificationPermission] =
+    useState("default");
 
   // 24 saatlik format garantisi ve otomatik düzeltme
   const ensureTimeFormat = (timeStr) => {
     if (!timeStr) return "00:00";
-    
+
     // Sadece rakamları al
-    const numbers = timeStr.replace(/[^0-9]/g, '');
-    
+    const numbers = timeStr.replace(/[^0-9]/g, "");
+
     // Eğer zaten HH:MM formatındaysa kontrol et
     if (/^\d{2}:\d{2}$/.test(timeStr)) {
-      const [hours, minutes] = timeStr.split(':').map(Number);
+      const [hours, minutes] = timeStr.split(":").map(Number);
       if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
         return timeStr;
       }
     }
-    
+
     // Sadece rakamlar varsa formatla
     if (numbers.length === 4) {
       const hours = parseInt(numbers.substring(0, 2));
       const minutes = parseInt(numbers.substring(2, 4));
       if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        return `${hours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}`;
       }
     }
-    
+
     // Sadece saat girilmişse
     if (numbers.length === 1 || numbers.length === 2) {
       const hours = parseInt(numbers);
       if (hours >= 0 && hours <= 23) {
-        return `${hours.toString().padStart(2, '0')}:00`;
+        return `${hours.toString().padStart(2, "0")}:00`;
       }
     }
-    
+
     // H:MM formatındaysa sıfır ekle
     if (/^\d{1}:\d{2}$/.test(timeStr)) {
       return "0" + timeStr;
     }
-    
+
     return "00:00";
   };
 
@@ -58,17 +63,20 @@ function Settings({ onLogout }) {
   useEffect(() => {
     const loadUserSettings = async () => {
       if (!auth.currentUser) return;
-      
+
       try {
         const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
         if (userDoc.exists() && userDoc.data().settings) {
           const savedSettings = userDoc.data().settings;
           setUserSettings({
-            dayStartTime: ensureTimeFormat(savedSettings.dayStartTime) || "00:00",
+            dayStartTime:
+              ensureTimeFormat(savedSettings.dayStartTime) || "00:00",
             notifications: {
               enabled: savedSettings.notifications?.enabled !== false,
-              times: savedSettings.notifications?.times?.map(time => ensureTimeFormat(time)) || ["07:00", "16:00", "23:00"]
-            }
+              times: savedSettings.notifications?.times?.map((time) =>
+                ensureTimeFormat(time)
+              ) || ["07:00", "16:00", "23:00"],
+            },
           });
         } else {
           // Eğer ayarlar yoksa default değerler
@@ -76,8 +84,8 @@ function Settings({ onLogout }) {
             dayStartTime: "00:00",
             notifications: {
               enabled: true,
-              times: ["07:00", "16:00", "23:00"]
-            }
+              times: ["07:00", "16:00", "23:00"],
+            },
           });
         }
       } catch (error) {
@@ -94,63 +102,82 @@ function Settings({ onLogout }) {
   useEffect(() => {
     // Service Worker'dan gelen mesajları dinle
     const handleServiceWorkerMessage = (event) => {
-      if (event.data && event.data.type === 'GET_NOTIFICATION_SETTINGS') {
+      if (event.data && event.data.type === "GET_NOTIFICATION_SETTINGS") {
         // Service Worker ayarları istiyor - gönder
         const currentTime = event.data.currentTime;
-        
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+
+        if (
+          "serviceWorker" in navigator &&
+          navigator.serviceWorker.controller
+        ) {
           navigator.serviceWorker.controller.postMessage({
-            type: 'SET_NOTIFICATION_SETTINGS',
+            type: "SET_NOTIFICATION_SETTINGS",
             settings: userSettings,
-            currentTime: currentTime
+            currentTime: currentTime,
           });
         }
       }
     };
-    
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
-      
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener(
+        "message",
+        handleServiceWorkerMessage
+      );
+
       // Service Worker scheduler'ı başlat
-      navigator.serviceWorker.ready.then(registration => {
+      navigator.serviceWorker.ready.then((registration) => {
         if (registration.active) {
-          registration.active.postMessage({ type: 'START_SCHEDULER' });
+          registration.active.postMessage({ type: "START_SCHEDULER" });
         }
       });
     }
-    
+
     return () => {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener(
+          "message",
+          handleServiceWorkerMessage
+        );
       }
     };
-  }, [userSettings]);
+  }, [userSettings]); // Auth state App.js'te yönetiliyor, bu yüzden dependency gerekmiyor
+
+  // Notification permission kontrolü
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
 
   // Ayarları Firebase'e kaydet
   const saveSettings = async (newSettings) => {
     if (!auth.currentUser) return;
-    
+
     setSaving(true);
     try {
       await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        settings: newSettings
+        settings: newSettings,
       });
-      
+
       // Service Worker'a yeni ayarları bildir
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({
-          type: 'SETTINGS_UPDATED',
-          settings: newSettings
+          type: "SETTINGS_UPDATED",
+          settings: newSettings,
         });
       }
-      
     } catch (error) {
       console.error("Ayarlar kaydedilirken hata:", error);
       // Hata durumunda user document oluştur
       try {
-        await setDoc(doc(db, "users", auth.currentUser.uid), {
-          settings: newSettings
-        }, { merge: true });
+        await setDoc(
+          doc(db, "users", auth.currentUser.uid),
+          {
+            settings: newSettings,
+          },
+          { merge: true }
+        );
       } catch (createError) {
         console.error("User document oluşturulurken hata:", createError);
       }
@@ -159,88 +186,72 @@ function Settings({ onLogout }) {
     }
   };
 
-  // Günün başlangıç saatini değiştir - mobile optimized
+  // Günün başlangıç saatini değiştir
   const handleDayStartTimeChange = (time) => {
-    // Debounce for mobile performance
-    if (handleDayStartTimeChange.timeout) {
-      clearTimeout(handleDayStartTimeChange.timeout);
-    }
-    
     const formattedTime = ensureTimeFormat(time);
     const newSettings = {
       ...userSettings,
-      dayStartTime: formattedTime
+      dayStartTime: formattedTime,
     };
-    
-    setUserSettings(newSettings);
-    
-    // Mobile için debounced save
-    handleDayStartTimeChange.timeout = setTimeout(() => {
-      saveSettings(newSettings);
-    }, 500);
-  };
-
-  // Bildirim durumunu değiştir - touch optimized
-  const handleNotificationToggle = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    
-    if (saving) return;
-    
-    // Touch feedback ekle
-    if (e?.currentTarget) {
-      e.currentTarget.style.transform = 'scale(0.98)';
-      setTimeout(() => {
-        if (e.currentTarget) {
-          e.currentTarget.style.transform = '';
-        }
-      }, 150);
-    }
-    
-    const newSettings = {
-      ...userSettings,
-      notifications: {
-        ...userSettings.notifications,
-        enabled: !userSettings.notifications.enabled
-      }
-    };
-    
     setUserSettings(newSettings);
     saveSettings(newSettings);
   };
 
-  // Hatırlatma saatini değiştir - mobile optimized
-  const handleNotificationTimeChange = (index, time) => {
-    // Debounce for mobile performance
-    if (handleNotificationTimeChange.timeout) {
-      clearTimeout(handleNotificationTimeChange.timeout);
-    }
-    
-    const newTimes = [...userSettings.notifications.times];
-    newTimes[index] = ensureTimeFormat(time);
-    
+  // Bildirim durumunu değiştir
+  const handleNotificationToggle = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    if (saving) return;
+
     const newSettings = {
       ...userSettings,
       notifications: {
         ...userSettings.notifications,
-        times: newTimes
-      }
+        enabled: !userSettings.notifications.enabled,
+      },
     };
-    
+
     setUserSettings(newSettings);
-    
-    // Mobile için debounced save
-    handleNotificationTimeChange.timeout = setTimeout(() => {
-      saveSettings(newSettings);
-    }, 500);
+    saveSettings(newSettings);
+  };
+
+  // Saat seçenekleri oluştur (00:00 - 23:59, 30 dakika aralıklarla)
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        options.push({ value: timeStr, label: timeStr });
+      }
+    }
+    return options;
+  };
+
+  const timeOptions = generateTimeOptions();
+
+  // Hatırlatma saatini değiştir
+  const handleNotificationTimeChange = (index, time) => {
+    const newTimes = [...userSettings.notifications.times];
+    newTimes[index] = time; // Dropdown'dan gelen değer zaten formatlanmış
+
+    const newSettings = {
+      ...userSettings,
+      notifications: {
+        ...userSettings.notifications,
+        times: newTimes,
+      },
+    };
+    setUserSettings(newSettings);
+    saveSettings(newSettings);
   };
 
   const handleLogout = () => {
     try {
-      localStorage.removeItem('habitTrackerSettings');
-      localStorage.removeItem('notification-permission');
+      localStorage.removeItem("habitTrackerSettings");
+      localStorage.removeItem("notification-permission");
     } catch (error) {
-      console.error('Çıkış sırasında hata:', error);
+      console.error("Çıkış sırasında hata:", error);
     }
     onLogout();
   };
@@ -265,28 +276,25 @@ function Settings({ onLogout }) {
       {/* Zaman Ayarları */}
       <div className="settings-section">
         <h3>🕐 Zaman Ayarları</h3>
-        
+
         {/* Günün Başlangıç Saati */}
         <div className="setting-item">
           <label>
             <span>🌅 Günün Başlangıç Saati</span>
             <div className="time-picker">
               <span>Gün saat</span>
-              <input 
-                type="text"
-                value={userSettings.dayStartTime} 
+              <select
+                value={userSettings.dayStartTime}
                 onChange={(e) => handleDayStartTimeChange(e.target.value)}
                 disabled={saving}
-                className="time-input"
-                pattern="[0-9]{2}:[0-9]{2}"
-                placeholder="HH:MM"
-                maxLength="5"
-                inputMode="numeric"
-                autoComplete="off"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck="false"
-              />
+                className="time-select-dropdown"
+              >
+                {timeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               <span>itibariyle başlar</span>
             </div>
           </label>
@@ -294,8 +302,9 @@ function Settings({ onLogout }) {
 
         <div className="data-info">
           <p>
-            💡 <strong>İpucu:</strong> Günün başlangıç saati, streak hesaplamalarını ve günlük takibi etkiler. 
-            Örneğin 06:00 seçerseniz, gece 02:00'de yaptığınız alışkanlık bir önceki güne sayılır.
+            💡 <strong>İpucu:</strong> Günün başlangıç saati, streak
+            hesaplamalarını ve günlük takibi etkiler. Örneğin 06:00 seçerseniz,
+            gece 02:00'de yaptığınız alışkanlık bir önceki güne sayılır.
           </p>
         </div>
       </div>
@@ -305,9 +314,9 @@ function Settings({ onLogout }) {
         <div className="section-header">
           <h3>🔔 Hatırlatma Bildirimleri</h3>
           <div className="toggle-switch" onClick={handleNotificationToggle}>
-            <input 
-              type="checkbox" 
-              id="notifications" 
+            <input
+              type="checkbox"
+              id="notifications"
               checked={userSettings.notifications.enabled}
               onChange={(e) => e.preventDefault()}
               disabled={saving}
@@ -320,39 +329,38 @@ function Settings({ onLogout }) {
           <>
             <div className="notification-times-compact">
               {userSettings.notifications.times.map((time, index) => (
-                <div key={`notification-${index}-${time}`} className="notification-item-compact">
+                <div
+                  key={`notification-${index}-${time}`}
+                  className="notification-item-compact"
+                >
                   <span className="notification-label">
                     {index === 0 && "🟢 İlk Hatırlatma"}
                     {index === 1 && "🟡 İkinci Hatırlatma"}
                     {index === 2 && "🔴 Son Hatırlatma"}
                   </span>
-                  <input 
-                    type="text"
-                    value={time} 
-                    onChange={(e) => handleNotificationTimeChange(index, e.target.value)}
+                  <select
+                    value={time}
+                    onChange={(e) =>
+                      handleNotificationTimeChange(index, e.target.value)
+                    }
                     disabled={saving}
-                    className="time-input-compact"
-                    pattern="[0-9]{2}:[0-9]{2}"
-                    placeholder="HH:MM"
-                    maxLength="5"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    aria-label={`${index === 0 ? 'İlk' : index === 1 ? 'İkinci' : 'Son'} hatırlatma saati`}
-                  />
+                    className="time-select-dropdown"
+                  >
+                    {timeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               ))}
             </div>
 
             <div className="data-info">
               <p>
-                🔔 <strong>Bildirimler:</strong> Günde 3 kez hatırlatma alacaksınız. 
-                Bu saatlerde alışkanlıklarınızı kontrol etmeniz ve gerekli işlemleri yapmanız hatırlatılacak.
-              </p>
-              <p>
-                📱 <strong>PWA Özelliği:</strong> Uygulamayı telefona kurduktan sonra, app kapalıyken bile bildirimler gelecektir.
+                🔔 <strong>Bildirimler:</strong> Günde 3 kez hatırlatma
+                alacaksınız. Bu saatlerde alışkanlıklarınızı kontrol etmeniz ve
+                gerekli işlemleri yapmanız hatırlatılacak.
               </p>
             </div>
           </>
@@ -361,8 +369,9 @@ function Settings({ onLogout }) {
         {!userSettings.notifications.enabled && (
           <div className="data-info">
             <p>
-              🔕 <strong>Bildirimler Kapalı:</strong> Hatırlatma bildirimleri devre dışı. 
-              Yukarıdaki anahtarı açarak bildirimleri etkinleştirebilirsiniz.
+              🔕 <strong>Bildirimler Kapalı:</strong> Hatırlatma bildirimleri
+              devre dışı. Yukarıdaki anahtarı açarak bildirimleri
+              etkinleştirebilirsiniz.
             </p>
           </div>
         )}
@@ -380,26 +389,28 @@ function Settings({ onLogout }) {
       {/* Hakkında */}
       <div className="settings-section">
         <h3>ℹ️ Hakkında</h3>
-        
+
         <div className="about-info">
           <div className="about-item">
             <span className="about-label">📱 Uygulama:</span>
             <span className="about-value">Solo Leveling - Habit Tracker</span>
           </div>
-          
+
           <div className="about-item">
             <span className="about-label">🔢 Versiyon:</span>
             <span className="about-value">v3.0.0</span>
           </div>
-          
+
           <div className="about-item">
             <span className="about-label">👨‍💻 Geliştirici:</span>
             <span className="about-value">Emrah Fidan</span>
           </div>
-          
+
           <div className="about-item">
             <span className="about-label">🎯 Tema:</span>
-            <span className="about-value">Atomik Alışkanlıklar - James Clear</span>
+            <span className="about-value">
+              Atomik Alışkanlıklar - James Clear
+            </span>
           </div>
 
           <div className="about-item">

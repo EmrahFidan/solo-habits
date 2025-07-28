@@ -1,0 +1,331 @@
+/* Responsive Design Improvements */
+
+/* Mobile First Approach - Base styles for mobile */
+@media screen and (max-width: 480px) {
+  /* Tab Navigation Mobile Optimizations */
+  .tab-navigation {
+    padding: 8px 15px 12px 15px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tab {
+    padding: 4px 6px;
+    min-width: 50px;
+    margin: 0 2px;
+  }
+  
+  .tab-name {
+    font-size: 0.7rem;
+    margin-top: 2px;
+  }
+  
+  .tab-icon {
+    font-size: 1.2rem;
+  }
+
+  /* Content Area Mobile */
+  .content {
+    padding: 10px;
+    margin-bottom: 80px; /* Tab navigation için boşluk */
+  }
+
+  /* Main Component Mobile */
+  .main-container {
+    padding: 10px;
+  }
+  
+  .main-header h1 {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+  }
+  
+  .username {
+    font-size: 1.1rem;
+  }
+
+  /* Personal Best Cards Mobile */
+  .personal-best-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .best-card {
+    padding: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .card-value .value-number {
+    font-size: 1.8rem;
+  }
+
+  /* Random Tip Section Mobile */
+  .random-tip-card {
+    padding: 15px;
+    margin: 10px 0;
+  }
+  
+  .tip-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .tip-refresh, .tip-guide {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Challenge/Habit Items Mobile */
+  .challenge-item, .bad-habit-item {
+    margin-bottom: 15px;
+    padding: 12px;
+  }
+  
+  .challenge-header, .bad-habit-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .challenge-stats, .bad-habit-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Monthly Progress Mobile */
+  .monthly-progress {
+    gap: 3px;
+    margin: 10px 0;
+  }
+  
+  .day-box {
+    width: 35px;
+    height: 35px;
+    font-size: 0.7rem;
+  }
+
+  /* Modal Mobile */  
+  .modal-overlay {
+    padding: 10px;
+  }
+  
+  .challenge-form, .bad-habit-form {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .icon-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  
+  .color-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  /* Settings Mobile */
+  .settings-container {
+    padding: 10px;
+  }
+  
+  .time-picker {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .notification-times-compact {
+    gap: 15px;
+  }
+  
+  .notification-item-compact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Tablet Portrait */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+  .tab-navigation {
+    padding: 10px 20px 15px 20px;
+  }
+  
+  .tab {
+    padding: 6px 8px;
+    min-width: 65px;
+  }
+  
+  .content {
+    padding: 15px;
+    margin-bottom: 85px;
+  }
+  
+  .personal-best-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .monthly-progress {
+    gap: 4px;
+  }
+  
+  .day-box {
+    width: 40px;
+    height: 40px;
+    font-size: 0.8rem;
+  }
+  
+  .challenge-form, .bad-habit-form {
+    width: 90%;
+    max-width: 500px;
+    padding: 25px;
+  }
+  
+  .icon-grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 10px;
+  }
+}
+
+/* Tablet Landscape & Small Desktop */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .content {
+    padding: 20px;
+    margin-bottom: 90px;
+  }
+  
+  .personal-best-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  
+  .monthly-progress {
+    gap: 5px;
+  }
+  
+  .day-box {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .challenge-form, .bad-habit-form {
+    width: 80%;
+    max-width: 600px;
+  }
+  
+  .icon-grid {
+    grid-template-columns: repeat(10, 1fr);
+  }
+}
+
+/* Large Desktop */
+@media screen and (min-width: 1025px) {
+  .content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 25px;
+    margin-bottom: 90px;
+  }
+  
+  .personal-best-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+  }
+  
+  .random-tip-card {
+    max-width: 900px;
+    margin: 20px auto;
+  }
+  
+  .challenges-list, .bad-habits-list {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .monthly-progress {
+    gap: 6px;
+    justify-content: center;
+  }
+  
+  .day-box {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .tab {
+    min-height: 48px; /* Apple HIG minimum */
+    min-width: 48px;
+  }
+  
+  .day-box {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .error-btn, .challenge-btn, .settings-btn {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  
+  /* Improve touch targets */
+  .comment-btn, .delete-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .tab-icon, .challenge-icon, .bad-habit-icon {
+    /* Better icon rendering on retina displays */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark Mode Support (System Preference) */
+@media (prefers-color-scheme: dark) {
+  /* Already dark theme, so no changes needed */
+  /* But we could add light theme alternative here */
+}
+
+/* Print Styles */
+@media print {
+  .tab-navigation {
+    display: none;
+  }
+  
+  .content {
+    margin-bottom: 0;
+    color: black;
+    background: white;
+  }
+  
+  .challenge-item, .bad-habit-item {
+    border: 1px solid #ccc;
+    break-inside: avoid;
+    margin-bottom: 15px;
+  }
+  
+  .monthly-progress {
+    display: none; /* Too complex for print */
+  }
+}

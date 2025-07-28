@@ -84,19 +84,44 @@ class NotificationManager {
     return true;
   }
 
-  // Custom toast notification oluştur
+  // Custom toast notification oluştur - XSS güvenli
   createToastNotification(title, body) {
     // Mevcut toast'ları temizle
     const existingToasts = document.querySelectorAll('.toast-notification');
     existingToasts.forEach(toast => toast.remove());
     
+    // XSS koruması için text content kullan
+    const sanitizeText = (text) => {
+      if (typeof text !== 'string') return '';
+      return text.replace(/[<>&"']/g, (char) => {
+        const entities = {
+          '<': '&lt;',
+          '>': '&gt;',
+          '&': '&amp;',
+          '"': '&quot;',
+          "'": '&#x27;'
+        };
+        return entities[char] || char;
+      });
+    };
+    
     // Yeni toast oluştur
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
-    toast.innerHTML = `
-      <div class="toast-header">${title}</div>
-      <div class="toast-body">${body}</div>
-    `;
+    
+    // Header oluştur
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'toast-header';
+    headerDiv.textContent = sanitizeText(title);
+    
+    // Body oluştur  
+    const bodyDiv = document.createElement('div');
+    bodyDiv.className = 'toast-body';
+    bodyDiv.textContent = sanitizeText(body);
+    
+    // Toast'a ekle
+    toast.appendChild(headerDiv);
+    toast.appendChild(bodyDiv);
     
     // CSS stilleri ekle
     toast.style.cssText = `

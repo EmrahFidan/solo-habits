@@ -128,9 +128,6 @@ function HMinus({ soundEnabled }) {
     return unsubscribe;
   }, [showExtendModal]);
 
-  useEffect(() => {
-    // Otomatik sistem kapatıldı - kullanıcı manual kontrol
-  }, []);
 
   const getDaysSinceStart = (startDate) => {
     if (!startDate) return 0;

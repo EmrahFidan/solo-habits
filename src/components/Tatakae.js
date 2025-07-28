@@ -11,6 +11,7 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import "./Tatakae.css";
+import "./SettingsStyles.css";
 
 function Tatakae({ soundEnabled }) {
   const [challenges, setChallenges] = useState([]);
@@ -664,14 +665,7 @@ function Tatakae({ soundEnabled }) {
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="challenge-form" onClick={(e) => e.stopPropagation()}>
             <h3>Challenge Oluştur</h3>
-            <p
-              style={{
-                textAlign: "center",
-                color: "rgba(204, 201, 220, 0.7)",
-                fontSize: "14px",
-                marginBottom: "20px",
-              }}
-            >
+            <p className="modal-section-description">
               Challenge bugün başlayacak!
             </p>
 

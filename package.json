@@ -4,17 +4,28 @@
   "private": true,
   "homepage": ".",
   "dependencies": {
+    "eslint": "^8.57.1",
+    "firebase": "^11.10.0",
+    "prettier": "^3.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^7.6.3",
     "react-scripts": "5.0.1",
-    "firebase": "^11.10.0",
-    "react-router-dom": "^7.6.3"
+    "webpack-bundle-analyzer": "^4.10.2"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "lint": "eslint src/ --ext .js,.jsx",
+    "lint:fix": "eslint src/ --ext .js,.jsx --fix",
+    "format": "prettier --write \"src/**/*.{js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,json,css,md}\"",
+    "type-check": "echo 'No TypeScript configured'",
+    "pre-commit": "npm run lint && npm run format:check",
+    "clean": "rm -rf build && rm -rf node_modules/.cache"
   },
   "eslintConfig": {
     "extends": [

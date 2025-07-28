@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from "react"; // useEffect import edildi
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import SkeletonLoader from "./components/SkeletonLoader";
+import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import Auth from "./components/Auth";
-import Main from "./components/Main";
-import Tatakae from "./components/Tatakae";
-import HMinus from "./components/HMinus";
-import Settings from "./components/Settings";
+
+// Lazy load components for better performance
+const Auth = lazy(() => import("./components/Auth"));
+const Main = lazy(() => import("./components/Main"));
+const Tatakae = lazy(() => import("./components/Tatakae"));
+const HMinus = lazy(() => import("./components/HMinus"));
+const Settings = lazy(() => import("./components/Settings"));
 
 function App() {
   const [activeTab, setActiveTab] = useState(0);
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Ses efektleri kaldırıldı
 
   useEffect(() => {
     console.log("🔥 Firebase Auth başlatılıyor...");
@@ -62,41 +64,54 @@ function App() {
 
   const handleTabSwitch = (tabId) => {
     setActiveTab(tabId);
-    // ...ses efektleri kaldırıldı...
   };
 
   if (loading) return <SkeletonLoader />;
 
-  if (!user) return <Auth />;
+  if (!user) {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<SkeletonLoader />}>
+          <Auth />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
 
   return (
-    <div className="app">
-      <div className="tab-navigation">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`tab ${activeTab === tab.id ? "active" : ""}`}
-            onClick={() => handleTabSwitch(tab.id)}
-          >
-            <span className="tab-icon">{tab.icon}</span>
-            <span className="tab-name">{tab.name}</span>
-          </button>
-        ))}
-      </div>
+    <ErrorBoundary userId={user?.uid}>
+      <div className="app">
+        <div className="tab-navigation">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`tab ${activeTab === tab.id ? "active" : ""}`}
+              onClick={() => handleTabSwitch(tab.id)}
+            >
+              <span className="tab-icon">{tab.icon}</span>
+              <span className="tab-name">{tab.name}</span>
+            </button>
+          ))}
+        </div>
 
-      <div className="content">
-        {activeTab === 0 && (
-          <Main user={user} userData={userData} setActiveTab={setActiveTab} />
-        )}
-        {activeTab === 1 && <Tatakae />}
-        {activeTab === 2 && <HMinus />}
-        {activeTab === 3 && (
-          <Settings 
-            onLogout={handleLogout}
-          />
-        )}
+        <div className="content">
+          <ErrorBoundary userId={user?.uid}>
+            <Suspense fallback={<SkeletonLoader />}>
+              {activeTab === 0 && (
+                <Main user={user} userData={userData} setActiveTab={setActiveTab} />
+              )}
+              {activeTab === 1 && <Tatakae />}
+              {activeTab === 2 && <HMinus />}
+              {activeTab === 3 && (
+                <Settings 
+                  onLogout={handleLogout}
+                />
+              )}
+            </Suspense>
+          </ErrorBoundary>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 
