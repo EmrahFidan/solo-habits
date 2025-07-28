@@ -1,134 +1,238 @@
-import React, { useState, useEffect, useCallback } from "react";
-import NotificationManager from "./NotificationManager";
+import React, { useState, useEffect } from "react";
+import { db, auth } from "../firebase";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import "./Settings.css";
 
 function Settings({ onLogout }) {
-  const [settings, setSettings] = useState(() => {
-    const defaultSettings = {
-      dailyReminder: { 
-        hour: 23, 
-        minute: 0, 
-        enabled: true 
-      },
-      streakWarning: { 
-        hour: 23, 
-        minute: 30, 
-        enabled: true 
-      },
-      achievements: { 
-        enabled: true 
-      },
-      challengeDeadline: { 
-        enabled: true 
-      },
-      recoveryMode: { 
-        enabled: true 
-      },
-      notificationsEnabled: true
-    };
-    
-    try {
-      const loadedSettings = NotificationManager.loadSettings();
-      return { ...defaultSettings, ...loadedSettings };
-    } catch (error) {
-      console.error('Settings yüklenirken hata:', error);
-      return defaultSettings;
+  const [userSettings, setUserSettings] = useState({
+    dayStartTime: "00:00",
+    notifications: {
+      enabled: true,
+      times: ["07:00", "16:00", "23:00"]
     }
   });
-  
-  const [permissionGranted, setPermissionGranted] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Settings'i kaydetme fonksiyonu
-  const saveSettingsToStorage = useCallback((settingsToSave) => {
-    try {
-      localStorage.setItem('habitTrackerSettings', JSON.stringify(settingsToSave));
-      NotificationManager.settings = settingsToSave;
-      NotificationManager.saveSettings();
-    } catch (error) {
-      console.error('Settings kaydedilirken hata:', error);
+  // 24 saatlik format garantisi ve otomatik düzeltme
+  const ensureTimeFormat = (timeStr) => {
+    if (!timeStr) return "00:00";
+    
+    // Sadece rakamları al
+    const numbers = timeStr.replace(/[^0-9]/g, '');
+    
+    // Eğer zaten HH:MM formatındaysa kontrol et
+    if (/^\d{2}:\d{2}$/.test(timeStr)) {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+        return timeStr;
+      }
     }
+    
+    // Sadece rakamlar varsa formatla
+    if (numbers.length === 4) {
+      const hours = parseInt(numbers.substring(0, 2));
+      const minutes = parseInt(numbers.substring(2, 4));
+      if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      }
+    }
+    
+    // Sadece saat girilmişse
+    if (numbers.length === 1 || numbers.length === 2) {
+      const hours = parseInt(numbers);
+      if (hours >= 0 && hours <= 23) {
+        return `${hours.toString().padStart(2, '0')}:00`;
+      }
+    }
+    
+    // H:MM formatındaysa sıfır ekle
+    if (/^\d{1}:\d{2}$/.test(timeStr)) {
+      return "0" + timeStr;
+    }
+    
+    return "00:00";
+  };
+
+  // Kullanıcı ayarlarını yükle
+  useEffect(() => {
+    const loadUserSettings = async () => {
+      if (!auth.currentUser) return;
+      
+      try {
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        if (userDoc.exists() && userDoc.data().settings) {
+          const savedSettings = userDoc.data().settings;
+          setUserSettings({
+            dayStartTime: ensureTimeFormat(savedSettings.dayStartTime) || "00:00",
+            notifications: {
+              enabled: savedSettings.notifications?.enabled !== false,
+              times: savedSettings.notifications?.times?.map(time => ensureTimeFormat(time)) || ["07:00", "16:00", "23:00"]
+            }
+          });
+        } else {
+          // Eğer ayarlar yoksa default değerler
+          setUserSettings({
+            dayStartTime: "00:00",
+            notifications: {
+              enabled: true,
+              times: ["07:00", "16:00", "23:00"]
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Ayarlar yüklenirken hata:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserSettings();
   }, []);
 
-  // Settings güncelleyici fonksiyonu
-  const updateSetting = useCallback((key, value) => {
-    setSettings(prevSettings => {
-      const newSettings = {
-        ...prevSettings,
-        [key]: value,
-      };
-      
-      // Anında kaydet
-      saveSettingsToStorage(newSettings);
-      return newSettings;
-    });
-  }, [saveSettingsToStorage]);
-
-  const updateNestedSetting = useCallback((section, key, value) => {
-    setSettings(prevSettings => {
-      const newSettings = {
-        ...prevSettings,
-        [section]: {
-          ...prevSettings[section],
-          [key]: value,
-        },
-      };
-      
-      // Anında kaydet
-      saveSettingsToStorage(newSettings);
-      return newSettings;
-    });
-  }, [saveSettingsToStorage]);
-
-  // İlk yükleme useEffect'i - sadece permission kontrolü
+  // Service Worker mesaj listener
   useEffect(() => {
-    const checkPermission = () => {
-      const savedPermission = localStorage.getItem('notification-permission');
-      const currentPermission = Notification.permission;
-      
-      if (savedPermission !== currentPermission) {
-        const isGranted = currentPermission === "granted";
-        setPermissionGranted(isGranted);
+    // Service Worker'dan gelen mesajları dinle
+    const handleServiceWorkerMessage = (event) => {
+      if (event.data && event.data.type === 'GET_NOTIFICATION_SETTINGS') {
+        // Service Worker ayarları istiyor - gönder
+        const currentTime = event.data.currentTime;
         
-        if (isGranted) {
-          setNotificationsEnabled(true);
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'SET_NOTIFICATION_SETTINGS',
+            settings: userSettings,
+            currentTime: currentTime
+          });
         }
-        localStorage.setItem('notification-permission', currentPermission);
-      } else {
-        setPermissionGranted(savedPermission === 'granted');
       }
     };
     
-    checkPermission();
-  }, []); // Sadece mount'ta çalışır, dependency yok
-
-  // Settings değiştiğinde otomatik kaydetme
-  useEffect(() => {
-    saveSettingsToStorage(settings);
-  }, [settings, saveSettingsToStorage]);
-
-  const handleNotificationToggle = async (e) => {
-    const enabled = e.target.checked;
-    setNotificationsEnabled(enabled);
-    
-    if (enabled) {
-      try {
-        const granted = await NotificationManager.requestPermission();
-        setPermissionGranted(granted);
-        if (granted) {
-          updateSetting("notificationsEnabled", true);
-        } else {
-          setNotificationsEnabled(false);
-          updateSetting("notificationsEnabled", false);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+      
+      // Service Worker scheduler'ı başlat
+      navigator.serviceWorker.ready.then(registration => {
+        if (registration.active) {
+          registration.active.postMessage({ type: 'START_SCHEDULER' });
         }
-      } catch (error) {
-        console.error('Bildirim izni alınırken hata:', error);
-        setNotificationsEnabled(false);
-        updateSetting("notificationsEnabled", false);
-      }
-    } else {
-      updateSetting("notificationsEnabled", false);
+      });
     }
+    
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+      }
+    };
+  }, [userSettings]);
+
+  // Ayarları Firebase'e kaydet
+  const saveSettings = async (newSettings) => {
+    if (!auth.currentUser) return;
+    
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, "users", auth.currentUser.uid), {
+        settings: newSettings
+      });
+      
+      // Service Worker'a yeni ayarları bildir
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SETTINGS_UPDATED',
+          settings: newSettings
+        });
+      }
+      
+    } catch (error) {
+      console.error("Ayarlar kaydedilirken hata:", error);
+      // Hata durumunda user document oluştur
+      try {
+        await setDoc(doc(db, "users", auth.currentUser.uid), {
+          settings: newSettings
+        }, { merge: true });
+      } catch (createError) {
+        console.error("User document oluşturulurken hata:", createError);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Günün başlangıç saatini değiştir - mobile optimized
+  const handleDayStartTimeChange = (time) => {
+    // Debounce for mobile performance
+    if (handleDayStartTimeChange.timeout) {
+      clearTimeout(handleDayStartTimeChange.timeout);
+    }
+    
+    const formattedTime = ensureTimeFormat(time);
+    const newSettings = {
+      ...userSettings,
+      dayStartTime: formattedTime
+    };
+    
+    setUserSettings(newSettings);
+    
+    // Mobile için debounced save
+    handleDayStartTimeChange.timeout = setTimeout(() => {
+      saveSettings(newSettings);
+    }, 500);
+  };
+
+  // Bildirim durumunu değiştir - touch optimized
+  const handleNotificationToggle = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
+    if (saving) return;
+    
+    // Touch feedback ekle
+    if (e?.currentTarget) {
+      e.currentTarget.style.transform = 'scale(0.98)';
+      setTimeout(() => {
+        if (e.currentTarget) {
+          e.currentTarget.style.transform = '';
+        }
+      }, 150);
+    }
+    
+    const newSettings = {
+      ...userSettings,
+      notifications: {
+        ...userSettings.notifications,
+        enabled: !userSettings.notifications.enabled
+      }
+    };
+    
+    setUserSettings(newSettings);
+    saveSettings(newSettings);
+  };
+
+  // Hatırlatma saatini değiştir - mobile optimized
+  const handleNotificationTimeChange = (index, time) => {
+    // Debounce for mobile performance
+    if (handleNotificationTimeChange.timeout) {
+      clearTimeout(handleNotificationTimeChange.timeout);
+    }
+    
+    const newTimes = [...userSettings.notifications.times];
+    newTimes[index] = ensureTimeFormat(time);
+    
+    const newSettings = {
+      ...userSettings,
+      notifications: {
+        ...userSettings.notifications,
+        times: newTimes
+      }
+    };
+    
+    setUserSettings(newSettings);
+    
+    // Mobile için debounced save
+    handleNotificationTimeChange.timeout = setTimeout(() => {
+      saveSettings(newSettings);
+    }, 500);
   };
 
   const handleLogout = () => {
@@ -141,225 +245,173 @@ function Settings({ onLogout }) {
     onLogout();
   };
 
-  const testNotification = () => {
-    if (permissionGranted) {
-      NotificationManager.showNotification("Test Bildirimi", {
-        body: "Bildirimleriniz düzgün çalışıyor! 🎉",
-        tag: 'test-notification'
-      });
-    }
-  };
+  if (loading) {
+    return (
+      <div className="settings-container">
+        <div className="settings-loading">
+          <h1>⚙️ AYARLAR YÜKLENİYOR...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="settings-container">
       <div className="settings-header">
         <h1>⚙️ AYARLAR</h1>
-        <p>Bildirim ayarlarını yönet</p>
+        <p>Uygulama ve zaman ayarları</p>
       </div>
 
-      {/* Notification Permission Section */}
+      {/* Zaman Ayarları */}
       <div className="settings-section">
-        <div className="section-header">
-          <h3>🔔 Bildirimler</h3>
-          {permissionGranted && notificationsEnabled && (
-            <button className="test-btn" onClick={testNotification}>
-              Test Et
-            </button>
-          )}
-        </div>
+        <h3>🕐 Zaman Ayarları</h3>
         
+        {/* Günün Başlangıç Saati */}
         <div className="setting-item">
           <label>
-            <span>Bildirimleri Etkinleştir</span>
-            <div className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={notificationsEnabled}
-                onChange={handleNotificationToggle}
+            <span>🌅 Günün Başlangıç Saati</span>
+            <div className="time-picker">
+              <span>Gün saat</span>
+              <input 
+                type="text"
+                value={userSettings.dayStartTime} 
+                onChange={(e) => handleDayStartTimeChange(e.target.value)}
+                disabled={saving}
+                className="time-input"
+                pattern="[0-9]{2}:[0-9]{2}"
+                placeholder="HH:MM"
+                maxLength="5"
+                inputMode="numeric"
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
               />
-              <span className="slider"></span>
+              <span>itibariyle başlar</span>
             </div>
           </label>
         </div>
 
-        {notificationsEnabled && !permissionGranted && (
-          <div className="permission-request">
-            <p>📱 Bildirim izni gerekli</p>
-            <p>Lütfen tarayıcı bildirim iznini verin</p>
+        <div className="data-info">
+          <p>
+            💡 <strong>İpucu:</strong> Günün başlangıç saati, streak hesaplamalarını ve günlük takibi etkiler. 
+            Örneğin 06:00 seçerseniz, gece 02:00'de yaptığınız alışkanlık bir önceki güne sayılır.
+          </p>
+        </div>
+      </div>
+
+      {/* Bildirim Ayarları */}
+      <div className="settings-section">
+        <div className="section-header">
+          <h3>🔔 Hatırlatma Bildirimleri</h3>
+          <div className="toggle-switch" onClick={handleNotificationToggle}>
+            <input 
+              type="checkbox" 
+              id="notifications" 
+              checked={userSettings.notifications.enabled}
+              onChange={(e) => e.preventDefault()}
+              disabled={saving}
+            />
+            <span className="slider"></span>
           </div>
+        </div>
+
+        {userSettings.notifications.enabled && (
+          <>
+            <div className="notification-times-compact">
+              {userSettings.notifications.times.map((time, index) => (
+                <div key={`notification-${index}-${time}`} className="notification-item-compact">
+                  <span className="notification-label">
+                    {index === 0 && "🟢 İlk Hatırlatma"}
+                    {index === 1 && "🟡 İkinci Hatırlatma"}
+                    {index === 2 && "🔴 Son Hatırlatma"}
+                  </span>
+                  <input 
+                    type="text"
+                    value={time} 
+                    onChange={(e) => handleNotificationTimeChange(index, e.target.value)}
+                    disabled={saving}
+                    className="time-input-compact"
+                    pattern="[0-9]{2}:[0-9]{2}"
+                    placeholder="HH:MM"
+                    maxLength="5"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    aria-label={`${index === 0 ? 'İlk' : index === 1 ? 'İkinci' : 'Son'} hatırlatma saati`}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="data-info">
+              <p>
+                🔔 <strong>Bildirimler:</strong> Günde 3 kez hatırlatma alacaksınız. 
+                Bu saatlerde alışkanlıklarınızı kontrol etmeniz ve gerekli işlemleri yapmanız hatırlatılacak.
+              </p>
+              <p>
+                📱 <strong>PWA Özelliği:</strong> Uygulamayı telefona kurduktan sonra, app kapalıyken bile bildirimler gelecektir.
+              </p>
+            </div>
+          </>
         )}
 
-        {permissionGranted && notificationsEnabled && (
-          <div className="permission-granted">
-            <p>✅ Bildirimler aktif</p>
+        {!userSettings.notifications.enabled && (
+          <div className="data-info">
+            <p>
+              🔕 <strong>Bildirimler Kapalı:</strong> Hatırlatma bildirimleri devre dışı. 
+              Yukarıdaki anahtarı açarak bildirimleri etkinleştirebilirsiniz.
+            </p>
           </div>
         )}
       </div>
 
-      {/* Notification Settings */}
-      {permissionGranted && notificationsEnabled && (
-        <>
-          {/* Daily Reminder Time */}
-          <div className="settings-section">
-            <h3>🌅 Günlük Hatırlatma Saati</h3>
-            <div className="setting-item">
-              <label>
-                <span>Günlük Hatırlatmaları Aktif Et</span>
-                <div className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(settings?.dailyReminder?.enabled)}
-                    onChange={(e) => {
-                      updateNestedSetting("dailyReminder", "enabled", e.target.checked);
-                    }}
-                  />
-                  <span className="slider"></span>
-                </div>
-              </label>
-            </div>
-            
-            {settings?.dailyReminder?.enabled && (
-              <div className="time-picker">
-                <label>Saat:</label>
-                <select
-                  value={settings?.dailyReminder?.hour ?? 23}
-                  onChange={(e) => {
-                    updateNestedSetting("dailyReminder", "hour", parseInt(e.target.value));
-                  }}
-                >
-                  {Array.from({length: 24}, (_, i) => (
-                    <option key={i} value={i}>
-                      {i.toString().padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-                
-                <label>Dakika:</label>
-                <select
-                  value={settings?.dailyReminder?.minute ?? 0}
-                  onChange={(e) => {
-                    updateNestedSetting("dailyReminder", "minute", parseInt(e.target.value));
-                  }}
-                >
-                  {Array.from({length: 60}, (_, i) => (
-                    <option key={i} value={i}>
-                      {i.toString().padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+      {/* Kaydetme Durumu */}
+      {saving && (
+        <div className="settings-section">
+          <div className="permission-request">
+            <p>💾 Ayarlar kaydediliyor...</p>
           </div>
-
-          {/* Streak Warning Time */}
-          <div className="settings-section">
-            <h3>🔥 Streak Uyarı Saati</h3>
-            <div className="setting-item">
-              <label>
-                <span>Streak Uyarılarını Aktif Et</span>
-                <div className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(settings?.streakWarning?.enabled)}
-                    onChange={(e) => {
-                      updateNestedSetting("streakWarning", "enabled", e.target.checked);
-                    }}
-                  />
-                  <span className="slider"></span>
-                </div>
-              </label>
-            </div>
-            
-            {settings?.streakWarning?.enabled && (
-              <div className="time-picker">
-                <label>Saat:</label>
-                <select
-                  value={settings?.streakWarning?.hour ?? 23}
-                  onChange={(e) => {
-                    updateNestedSetting("streakWarning", "hour", parseInt(e.target.value));
-                  }}
-                >
-                  {Array.from({length: 24}, (_, i) => (
-                    <option key={i} value={i}>
-                      {i.toString().padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-                
-                <label>Dakika:</label>
-                <select
-                  value={settings?.streakWarning?.minute ?? 30}
-                  onChange={(e) => {
-                    updateNestedSetting("streakWarning", "minute", parseInt(e.target.value));
-                  }}
-                >
-                  {Array.from({length: 60}, (_, i) => (
-                    <option key={i} value={i}>
-                      {i.toString().padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          {/* Other Notification Types */}
-          <div className="settings-section">
-            <h3>🏆 Diğer Bildirimler</h3>
-            
-            <div className="setting-item">
-              <label>
-                <span>🏆 Rozet Bildirimleri</span>
-                <div className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(settings?.achievements?.enabled)}
-                    onChange={(e) => {
-                      updateNestedSetting("achievements", "enabled", e.target.checked);
-                    }}
-                  />
-                  <span className="slider"></span>
-                </div>
-              </label>
-            </div>
-
-            <div className="setting-item">
-              <label>
-                <span>⏰ Challenge Bildirimleri</span>
-                <div className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(settings?.challengeDeadline?.enabled)}
-                    onChange={(e) => {
-                      updateNestedSetting("challengeDeadline", "enabled", e.target.checked);
-                    }}
-                  />
-                  <span className="slider"></span>
-                </div>
-              </label>
-            </div>
-
-            <div className="setting-item">
-              <label>
-                <span>🚨 Recovery Mode Bildirimleri</span>
-                <div className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(settings?.recoveryMode?.enabled)}
-                    onChange={(e) => {
-                      updateNestedSetting("recoveryMode", "enabled", e.target.checked);
-                    }}
-                  />
-                  <span className="slider"></span>
-                </div>
-              </label>
-            </div>
-          </div>
-        </>
+        </div>
       )}
 
-      {/* Logout Button */}
+      {/* Hakkında */}
       <div className="settings-section">
+        <h3>ℹ️ Hakkında</h3>
+        
+        <div className="about-info">
+          <div className="about-item">
+            <span className="about-label">📱 Uygulama:</span>
+            <span className="about-value">Solo Leveling - Habit Tracker</span>
+          </div>
+          
+          <div className="about-item">
+            <span className="about-label">🔢 Versiyon:</span>
+            <span className="about-value">v3.0.0</span>
+          </div>
+          
+          <div className="about-item">
+            <span className="about-label">👨‍💻 Geliştirici:</span>
+            <span className="about-value">Emrah Fidan</span>
+          </div>
+          
+          <div className="about-item">
+            <span className="about-label">🎯 Tema:</span>
+            <span className="about-value">Atomik Alışkanlıklar - James Clear</span>
+          </div>
+
+          <div className="about-item">
+            <span className="about-label">🕐 Zaman Dilimi:</span>
+            <span className="about-value">Türkiye Saati (UTC+3)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Çıkış Yap */}
+      <div className="settings-section logout-section">
+        <p>Hesabınızdan çıkış yapmak istediğinizden emin misiniz?</p>
         <button className="logout-btn-settings" onClick={handleLogout}>
           🚪 Çıkış Yap
         </button>

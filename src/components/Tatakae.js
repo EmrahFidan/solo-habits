@@ -20,12 +20,15 @@ function Tatakae({ soundEnabled }) {
     icon: "🎯",
     color: "#667eea",
     description: "",
-    difficulty: "medium",
     duration: 30,
+    bundlePartner: "", // Temptation Bundling için
   });
   const [showConfirm, setShowConfirm] = useState(null);
   const [showDescription, setShowDescription] = useState(null);
   const [updatedDescription, setUpdatedDescription] = useState("");
+  const [showStackModal, setShowStackModal] = useState(false);
+  const [stackTriggers, setStackTriggers] = useState({});
+  const [showExtendModal, setShowExtendModal] = useState(null); // 1 hafta → 1 ay uzatma modal'ı
 
   // 🎊 ANIMATED CELEBRATIONS STATE
   const [confetti, setConfetti] = useState([]);
@@ -33,55 +36,6 @@ function Tatakae({ soundEnabled }) {
   const [screenShake, setScreenShake] = useState(false);
   const [achievementModal, setAchievementModal] = useState(null);
 
-  // 📊 HEATMAP STATE
-  const [showHeatmap, setShowHeatmap] = useState(false);
-  const [heatmapData, setHeatmapData] = useState([]);
-  const [hoveredDay, setHoveredDay] = useState(null);
-
-  // 📚 CHALLENGE HISTORY STATE
-  const [showHistory, setShowHistory] = useState(false);
-  const [completedChallenges, setCompletedChallenges] = useState([]);
-  const [historyStats, setHistoryStats] = useState({
-    totalCompleted: 0,
-    averageSuccess: 0,
-    longestStreak: 0,
-    totalDays: 0,
-  });
-
-  const difficultyLevels = React.useMemo(
-    () => [
-      {
-        id: "easy",
-        name: "Kolay",
-        emoji: "🟢",
-        pointsPerDay: 1,
-        color: "#43e97b",
-        description: "1 puan/gün - Hafif başlangıç",
-        penalty: 1,
-      },
-      {
-        id: "medium",
-        name: "Orta",
-        emoji: "🟡",
-        pointsPerDay: 2,
-        color: "#feca57",
-        description: "2 puan/gün - Dengeli zorluk",
-        penalty: 2,
-      },
-      {
-        id: "hard",
-        name: "Zor",
-        emoji: "🔴",
-        pointsPerDay: 3,
-        color: "#ff6b6b",
-        description: "3 puan/gün - Maksimum challenge!",
-        penalty: 3,
-      },
-    ],
-    []
-  );
-
-  // 🆕 Süre seçenekleri
   const durationOptions = [
     {
       value: 7,
@@ -145,99 +99,6 @@ function Tatakae({ soundEnabled }) {
     "#fcb69f",
   ];
 
-  // 📊 HEATMAP DATA GENERATOR
-  const generateHeatmapData = useCallback((allChallenges) => {
-    const data = [];
-    const today = new Date();
-
-    // Son 12 hafta (84 gün)
-    for (let i = 83; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-
-      let completedCount = 0;
-      let totalChallenges = 0;
-
-      allChallenges.forEach((challenge) => {
-        const startDate = new Date(challenge.startDate + "T00:00:00");
-        const daysDiff = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
-        const duration = challenge.duration || 30;
-
-        if (daysDiff >= 0 && daysDiff < duration) {
-          totalChallenges++;
-          const progress = challenge.monthlyProgress || [];
-          if (progress[daysDiff]) {
-            completedCount++;
-          }
-        }
-      });
-
-      data.push({
-        date: date.toISOString().split("T")[0],
-        completed: completedCount,
-        total: totalChallenges,
-        level:
-          totalChallenges === 0
-            ? 0
-            : Math.min(Math.ceil((completedCount / totalChallenges) * 4), 4),
-        dayName: date.toLocaleDateString("tr-TR", { weekday: "short" }),
-        fullDate: date.toLocaleDateString("tr-TR"),
-      });
-    }
-
-    setHeatmapData(data);
-  }, []);
-
-  // 📚 HISTORY STATS CALCULATOR
-  const calculateHistoryStats = useCallback((completed) => {
-    if (completed.length === 0) {
-      setHistoryStats({
-        totalCompleted: 0,
-        averageSuccess: 0,
-        longestStreak: 0,
-        totalDays: 0,
-      });
-      return;
-    }
-
-    const totalCompleted = completed.length;
-    const totalDays = completed.reduce(
-      (sum, c) => sum + (c.completedDays || 0),
-      0
-    );
-    const totalPossibleDays = completed.reduce(
-      (sum, c) => sum + (c.duration || 30),
-      0
-    );
-    const averageSuccess = Math.round((totalDays / totalPossibleDays) * 100);
-
-    // En uzun streak hesaplama (basitleştirilmiş)
-    let longestStreak = 0;
-    completed.forEach((challenge) => {
-      const progress = challenge.monthlyProgress || [];
-      let currentStreak = 0;
-      let maxStreak = 0;
-
-      progress.forEach((day) => {
-        if (day) {
-          currentStreak++;
-          maxStreak = Math.max(maxStreak, currentStreak);
-        } else {
-          currentStreak = 0;
-        }
-      });
-
-      longestStreak = Math.max(longestStreak, maxStreak);
-    });
-
-    setHistoryStats({
-      totalCompleted,
-      averageSuccess,
-      longestStreak,
-      totalDays,
-    });
-  }, []);
-
   useEffect(() => {
     if (!auth.currentUser) return;
     const q = query(
@@ -250,34 +111,38 @@ function Tatakae({ soundEnabled }) {
         ...doc.data(),
       }));
 
-      // 🆕 Tarihe göre sıralama - en yeni üstte
       allChallenges.sort((a, b) => {
         const dateA = new Date(a.createdAt?.toDate?.() || a.createdAt || 0);
         const dateB = new Date(b.createdAt?.toDate?.() || b.createdAt || 0);
-        return dateB - dateA; // En yeni üstte
+        return dateB - dateA;
       });
 
-      // Aktif ve tamamlanan challenge'ları ayır
       const active = allChallenges.filter(
         (c) => getDaysSinceStart(c.startDate) < (c.duration || 30)
       );
-      const completed = allChallenges.filter(
-        (c) => getDaysSinceStart(c.startDate) >= (c.duration || 30)
-      );
 
       setChallenges(active);
-      setCompletedChallenges(completed);
-
-      // İstatistikleri hesapla
-      calculateHistoryStats(completed);
-
-      // Heatmap datasını güncelle
-      generateHeatmapData(allChallenges);
+      
+      // 7 günlük challenge'lar için otomatik uzatma kontrolü
+      active.forEach(challenge => {
+        const daysSinceStart = getDaysSinceStart(challenge.startDate);
+        
+        if (challenge.duration === 7 && daysSinceStart >= 6 && !challenge.isExtended) {
+          const completedDays = challenge.completedDays || 0;
+          const successRate = Math.round((completedDays / 7) * 100);
+          
+          if (successRate >= 70) {
+            // Modal zaten açık değilse aç
+            if (!showExtendModal || showExtendModal.id !== challenge.id) {
+              setShowExtendModal(challenge);
+            }
+          }
+        }
+      });
     });
     return unsubscribe;
-  }, [calculateHistoryStats, generateHeatmapData]);
+  }, [showExtendModal]);
 
-  // 🎊 CONFETTI ANIMATION SYSTEM
   const createConfetti = useCallback(() => {
     const newConfetti = [];
     for (let i = 0; i < 100; i++) {
@@ -317,7 +182,6 @@ function Tatakae({ soundEnabled }) {
     }, 4000);
   }, []);
 
-  // 🌟 PARTICLE EFFECTS SYSTEM
   const createParticles = useCallback((x, y, type = "star") => {
     const newParticles = [];
     const particleCount = type === "heart" ? 15 : 25;
@@ -347,7 +211,7 @@ function Tatakae({ soundEnabled }) {
             ...particle,
             x: particle.x + particle.vx,
             y: particle.y + particle.vy,
-            vy: particle.vy + 0.1, // gravity
+            vy: particle.vy + 0.1,
             life: particle.life - particle.decay,
           }))
           .filter((particle) => particle.life > 0)
@@ -360,46 +224,29 @@ function Tatakae({ soundEnabled }) {
     }, 2000);
   }, []);
 
-  // Penalty uygulama fonksiyonu
   const applyPenalty = useCallback(
     async (challenge, missedDayIndex) => {
-      const difficulty = difficultyLevels.find(
-        (d) => d.id === challenge.difficulty
-      );
-      const penaltyPoints = difficulty?.penalty || 1;
-
-      const newCurrentPoints = Math.max(
-        0,
-        (challenge.currentPoints || 0) - penaltyPoints
-      );
       const newMissedDays = (challenge.missedDays || 0) + 1;
-
       const consecutiveMissed = challenge.consecutiveMissed || 0;
       const newConsecutiveMissed = consecutiveMissed + 1;
       const recoveryMode = newConsecutiveMissed >= 2;
 
       await updateDoc(doc(db, "tatakae", challenge.id), {
-        currentPoints: newCurrentPoints,
         missedDays: newMissedDays,
         consecutiveMissed: newConsecutiveMissed,
         recoveryMode: recoveryMode,
         lastPenaltyApplied: new Date().toISOString(),
       });
 
-      console.log(
-        `😢 ${challenge.name} için ${penaltyPoints} puan kesildi! (Kaçırılan gün)`
-      );
-
       if (recoveryMode) {
         console.log(
-          `🔄 Recovery Mode: ${challenge.name} için ertesi gün bonus puan şansı!`
+          `🔄 Recovery Mode: ${challenge.name} için ertesi gün bonus şans!`
         );
       }
     },
-    [difficultyLevels]
+    []
   );
 
-  // Penalty kontrolü fonksiyonu
   const checkDailyPenalties = useCallback(async () => {
     const today = new Date().toDateString();
     const lastPenaltyCheck = localStorage.getItem("lastPenaltyCheck");
@@ -424,7 +271,6 @@ function Tatakae({ soundEnabled }) {
     localStorage.setItem("lastPenaltyCheck", today);
   }, [challenges, applyPenalty]);
 
-  // Penalty kontrolü için günlük check
   useEffect(() => {
     if (!auth.currentUser) return;
     checkDailyPenalties();
@@ -490,19 +336,12 @@ function Tatakae({ soundEnabled }) {
     const day = String(today.getDate()).padStart(2, "0");
     const startDate = `${year}-${month}-${day}`;
 
-    const selectedDifficulty = difficultyLevels.find(
-      (d) => d.id === newChallenge.difficulty
-    );
     const duration = newChallenge.duration;
 
     await addDoc(collection(db, "tatakae"), {
       ...newChallenge,
       startDate: startDate,
-      difficulty: newChallenge.difficulty,
       duration: duration,
-      pointsPerDay: selectedDifficulty.pointsPerDay,
-      totalPossiblePoints: selectedDifficulty.pointsPerDay * duration,
-      currentPoints: 0,
       userId: auth.currentUser.uid,
       monthlyProgress: Array(duration).fill(false),
       completedDays: 0,
@@ -517,71 +356,43 @@ function Tatakae({ soundEnabled }) {
       icon: "🎯",
       color: "#667eea",
       description: "",
-      difficulty: "medium",
       duration: 30,
+      bundlePartner: "", // Bundle partner'ı da temizle
     });
     setShowForm(false);
   };
 
-  // 🆕 CHALLENGE UZATMA FONKSİYONU
-  const extendChallenge = async (challenge) => {
-    if (challenge.duration !== 7) return; // Sadece 7 günlük challenge'lar uzatılabilir
-
-    const selectedDifficulty = difficultyLevels.find(
-      (d) => d.id === challenge.difficulty
-    );
+  const extendToMonth = async (challenge) => {
+    if (challenge.duration !== 7) return;
+    
     const newDuration = 30;
-
-    // Mevcut progress'i koru, sadece 23 gün daha ekle
     const currentProgress = challenge.monthlyProgress || Array(7).fill(false);
     const extendedProgress = [...currentProgress, ...Array(23).fill(false)];
-
+    
     await updateDoc(doc(db, "tatakae", challenge.id), {
       duration: newDuration,
-      totalPossiblePoints: selectedDifficulty.pointsPerDay * newDuration,
       monthlyProgress: extendedProgress,
-      isExtended: true, // Uzatıldığını işaretle
+      isExtended: true,
       extendedAt: new Date(),
     });
-
-    console.log(
-      `🚀 ${challenge.name} 1 aya uzatıldı! Mevcut progress korundu.`
-    );
+    
+    setShowExtendModal(null);
   };
 
-  // 📚 RE-CHALLENGE FUNCTION
-  const rechallenge = async (completedChallenge) => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    const startDate = `${year}-${month}-${day}`;
-
-    const duration = completedChallenge.duration || 30;
-
-    await addDoc(collection(db, "tatakae"), {
-      name: completedChallenge.name + " (Tekrar)",
-      icon: completedChallenge.icon,
-      color: completedChallenge.color,
-      description: completedChallenge.description,
-      difficulty: completedChallenge.difficulty,
-      duration: duration,
-      startDate: startDate,
-      pointsPerDay: completedChallenge.pointsPerDay,
-      totalPossiblePoints: completedChallenge.totalPossiblePoints,
-      currentPoints: 0,
-      userId: auth.currentUser.uid,
-      monthlyProgress: Array(duration).fill(false),
-      completedDays: 0,
-      missedDays: 0,
-      consecutiveMissed: 0,
-      recoveryMode: false,
-      createdAt: new Date(),
-      isRechallenge: true,
-      originalChallengeId: completedChallenge.id,
-    });
-
-    console.log(`🔄 ${completedChallenge.name} yeniden başlatıldı!`);
+  const checkForExtendOffer = (challenge) => {
+    const daysSinceStart = getDaysSinceStart(challenge.startDate);
+    const duration = challenge.duration || 30;
+    
+    // 7 günlük challenge tamamlandıysa ve henüz uzatılmadıysa
+    if (duration === 7 && daysSinceStart >= 6 && !challenge.isExtended) {
+      const completedDays = challenge.completedDays || 0;
+      const successRate = Math.round((completedDays / 7) * 100);
+      
+      // En az %70 başarı oranı varsa uzatma öner
+      if (successRate >= 70) {
+        setShowExtendModal(challenge);
+      }
+    }
   };
 
   const toggleDay = async (challenge, dayIndex) => {
@@ -599,25 +410,6 @@ function Tatakae({ soundEnabled }) {
     newProgress[dayIndex] = !newProgress[dayIndex];
 
     const completedDays = newProgress.filter((day) => day).length;
-    const difficulty = difficultyLevels.find(
-      (d) => d.id === challenge.difficulty
-    );
-    const pointsPerDay = difficulty?.pointsPerDay || 1;
-
-    const isRecoveryMode = challenge.recoveryMode;
-    const bonusMultiplier =
-      isRecoveryMode && !wasCompleted && newProgress[dayIndex] ? 2 : 1;
-    const earnedPoints = newProgress[dayIndex]
-      ? pointsPerDay * bonusMultiplier
-      : 0;
-
-    let currentPoints = challenge.currentPoints || 0;
-    if (!wasCompleted && newProgress[dayIndex]) {
-      currentPoints += earnedPoints;
-    } else if (wasCompleted && !newProgress[dayIndex]) {
-      currentPoints -= pointsPerDay * bonusMultiplier;
-    }
-
     const newPercentage = Math.round((completedDays / duration) * 100);
     const newConsecutiveMissed = newProgress[dayIndex]
       ? 0
@@ -627,33 +419,38 @@ function Tatakae({ soundEnabled }) {
     await updateDoc(doc(db, "tatakae", challenge.id), {
       monthlyProgress: newProgress,
       completedDays: completedDays,
-      currentPoints: Math.max(0, currentPoints),
       consecutiveMissed: newConsecutiveMissed,
       recoveryMode: newRecoveryMode,
       lastUpdated: new Date(),
     });
 
-    // 🎊 CELEBRATION TRIGGERS
+    // 7 günlük challenge tamamlandıysa uzatma öner
+    if (duration === 7 && daysSinceStart >= 5 && newProgress[dayIndex]) {
+      setTimeout(() => checkForExtendOffer(challenge), 1000);
+    }
+    
+    // 30 günlük challenge tamamlandıysa aylık rozet ekle
+    if (duration === 30 && daysSinceStart >= 29 && newPercentage === 100) {
+      const newMonthsCompleted = (challenge.monthsCompleted || 0) + 1;
+      await updateDoc(doc(db, "tatakae", challenge.id), {
+        monthsCompleted: newMonthsCompleted,
+      });
+    }
+
     if (!wasCompleted && newProgress[dayIndex] && soundEnabled) {
-      // Particle effect ekle (tıklanan yerin koordinatlarında)
       const event = window.event;
       if (event) {
         createParticles(event.clientX, event.clientY, "star");
       }
 
-      if (isRecoveryMode) {
-        console.log(
-          `🔥 RECOVERY BONUS! ${earnedPoints} puan kazandın! (${pointsPerDay}x2)`
-        );
+      if (challenge.recoveryMode) {
         window.playSound && window.playSound("milestone50");
       } else {
         window.playSound && window.playSound("complete");
       }
 
-      // Milestone celebrations
       setTimeout(() => {
         if (newPercentage === 100) {
-          // 🎊 FULL COMPLETION CELEBRATION!
           createConfetti();
           setScreenShake(true);
           setTimeout(() => setScreenShake(false), 500);
@@ -665,13 +462,11 @@ function Tatakae({ soundEnabled }) {
             color: challenge.color,
             stats: {
               completedDays: completedDays,
-              totalPoints: currentPoints,
               successRate: Math.round((completedDays / duration) * 100),
             },
           });
 
           window.playSound && window.playSound("milestone100");
-          console.log("🏆 CHALLENGE TAMAMLANDI! Müthiş iş!");
         } else if (newPercentage === 75) {
           createParticles(
             window.innerWidth / 2,
@@ -679,21 +474,12 @@ function Tatakae({ soundEnabled }) {
             "heart"
           );
           window.playSound && window.playSound("milestone75");
-          console.log("🔥 SON ÇEYREK! %75 tamamlandı!");
         } else if (newPercentage === 50) {
           window.playSound && window.playSound("milestone50");
-          console.log("⭐ YARIM YOL! %50 tamamlandı!");
         } else if (newPercentage === 25) {
           window.playSound && window.playSound("milestone25");
-          console.log("🌟 İLK MİLESTONE! %25 tamamlandı!");
         }
       }, 300);
-    }
-
-    if (!wasCompleted && newProgress[dayIndex]) {
-      console.log(
-        `🎉 +${earnedPoints} puan kazandın! Toplam: ${currentPoints} puan`
-      );
     }
   };
 
@@ -708,6 +494,30 @@ function Tatakae({ soundEnabled }) {
     });
     setShowDescription(null);
     setUpdatedDescription("");
+  };
+
+  const updateStackTriggers = async () => {
+    const updatePromises = Object.entries(stackTriggers).map(([challengeId, trigger]) => {
+      if (trigger.trim()) {
+        return updateDoc(doc(db, "tatakae", challengeId), {
+          stackTrigger: trigger.trim(),
+        });
+      }
+      return null;
+    }).filter(Boolean);
+
+    await Promise.all(updatePromises);
+    setShowStackModal(false);
+    setStackTriggers({});
+  };
+
+  const openStackModal = () => {
+    const triggers = {};
+    challenges.forEach(challenge => {
+      triggers[challenge.id] = challenge.stackTrigger || "";
+    });
+    setStackTriggers(triggers);
+    setShowStackModal(true);
   };
 
   const getCompletionPercentage = (challenge) => {
@@ -744,43 +554,15 @@ function Tatakae({ soundEnabled }) {
     return getDaysSinceStart(challenge.startDate) >= duration;
   };
 
-  // 🆕 EXTEND BUTONU GÖSTERİLECEK Mİ?
-  const canExtend = (challenge) => {
-    const completionRate = getCompletionPercentage(challenge);
-    return (
-      challenge.duration === 7 &&
-      isExpired(challenge) &&
-      !challenge.isExtended &&
-      completionRate >= 85
-    ); // 🆕 En az %85 tamamlamış olmalı
-  };
-
-  // 📊 EXPORT HEATMAP DATA
-  const exportHeatmapData = () => {
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      "Date,Completed,Total,Success Rate\n" +
-      heatmapData
-        .map(
-          (day) =>
-            `${day.date},${day.completed},${day.total},${
-              day.total ? ((day.completed / day.total) * 100).toFixed(1) : 0
-            }%`
-        )
-        .join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "tatakae_heatmap_data.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const getDiamondClass = (monthsCompleted) => {
+    if (monthsCompleted >= 6) return 'diamond-legendary'; // 6+ Altın
+    if (monthsCompleted >= 4) return 'diamond-master';    // 4-5 Kırmızı
+    if (monthsCompleted >= 2) return 'diamond-advanced';  // 2-3 Mor
+    return 'diamond-basic';                               // 1 Mavi
   };
 
   return (
     <div className={`tatakae-container ${screenShake ? "screen-shake" : ""}`}>
-      {/* 🎊 CONFETTI OVERLAY */}
       {confetti.length > 0 && (
         <div className="confetti-container">
           {confetti.map((piece) => (
@@ -800,7 +582,6 @@ function Tatakae({ soundEnabled }) {
         </div>
       )}
 
-      {/* 🌟 PARTICLES OVERLAY */}
       {particles.length > 0 && (
         <div className="particles-container">
           {particles.map((particle) => (
@@ -822,7 +603,6 @@ function Tatakae({ soundEnabled }) {
         </div>
       )}
 
-      {/* 🏆 ACHIEVEMENT MODAL */}
       {achievementModal && (
         <div
           className="achievement-modal-overlay"
@@ -851,12 +631,6 @@ function Tatakae({ soundEnabled }) {
               </div>
               <div className="stat-item">
                 <span className="stat-value">
-                  {achievementModal.stats.totalPoints}
-                </span>
-                <span className="stat-label">Toplam Puan</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">
                   {achievementModal.stats.successRate}%
                 </span>
                 <span className="stat-label">Başarı Oranı</span>
@@ -875,166 +649,16 @@ function Tatakae({ soundEnabled }) {
       <div className="tatakae-header">
         <h1>⚡ TATAKAE </h1>
         <p>Hayatında yeni bir şey dene ve deneyimle!</p>
-
-        {/* 📊📚 HEADER BUTTONS */}
-        <div className="header-buttons">
-          <button
-            className="header-btn"
-            onClick={() => setShowHeatmap(!showHeatmap)}
-          >
-            📊 {showHeatmap ? "Gizle" : "Heatmap"}
-          </button>
-          <button
-            className="header-btn"
-            onClick={() => setShowHistory(!showHistory)}
-          >
-            📚 {showHistory ? "Gizle" : "Geçmiş"}
-          </button>
-        </div>
       </div>
 
-      {/* 📊 HEATMAP SECTION */}
-      {showHeatmap && (
-        <div className="heatmap-section">
-          <div className="heatmap-header">
-            <h3>📊 Aktivite Haritası (Son 12 Hafta)</h3>
-            <button className="export-btn" onClick={exportHeatmapData}>
-              📤 Dışa Aktar
-            </button>
-          </div>
-          <div className="heatmap-container">
-            <div className="heatmap-grid">
-              {heatmapData.map((day, index) => (
-                <div
-                  key={day.date}
-                  className={`heatmap-day level-${day.level}`}
-                  onMouseEnter={() => setHoveredDay(day)}
-                  onMouseLeave={() => setHoveredDay(null)}
-                  data-date={day.date}
-                >
-                  {hoveredDay === day && (
-                    <div className="heatmap-tooltip">
-                      <strong>{day.fullDate}</strong>
-                      <br />
-                      {day.completed}/{day.total} challenge tamamlandı
-                      {day.total > 0 && (
-                        <span>
-                          {" "}
-                          ({Math.round((day.completed / day.total) * 100)}%)
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="heatmap-legend">
-              <span>Az</span>
-              <div className="legend-squares">
-                <div className="legend-square level-0"></div>
-                <div className="legend-square level-1"></div>
-                <div className="legend-square level-2"></div>
-                <div className="legend-square level-3"></div>
-                <div className="legend-square level-4"></div>
-              </div>
-              <span>Çok</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 📚 CHALLENGE HISTORY SECTION */}
-      {showHistory && (
-        <div className="history-section">
-          <div className="history-header">
-            <h3>📚 Challenge Geçmişi</h3>
-            <div className="history-stats">
-              <div className="history-stat">
-                <span className="stat-number">
-                  {historyStats.totalCompleted}
-                </span>
-                <span className="stat-text">Tamamlanan</span>
-              </div>
-              <div className="history-stat">
-                <span className="stat-number">
-                  {historyStats.averageSuccess}%
-                </span>
-                <span className="stat-text">Ortalama Başarı</span>
-              </div>
-              <div className="history-stat">
-                <span className="stat-number">
-                  {historyStats.longestStreak}
-                </span>
-                <span className="stat-text">En Uzun Streak</span>
-              </div>
-              <div className="history-stat">
-                <span className="stat-number">{historyStats.totalDays}</span>
-                <span className="stat-text">Toplam Gün</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="completed-challenges-list">
-            {completedChallenges.length === 0 ? (
-              <div className="no-history">
-                <p>🎯 Henüz tamamlanmış challenge yok</p>
-                <p>İlk challenge'ını tamamla ve burada gör!</p>
-              </div>
-            ) : (
-              completedChallenges.map((challenge) => (
-                <div key={challenge.id} className="completed-challenge-item">
-                  <div className="completed-challenge-header">
-                    <span className="completed-challenge-icon">
-                      {challenge.icon}
-                    </span>
-                    <div className="completed-challenge-info">
-                      <h4>{challenge.name}</h4>
-                      <p>
-                        {challenge.completedDays || 0}/
-                        {challenge.duration || 30} gün •{" "}
-                        {Math.round(
-                          ((challenge.completedDays || 0) /
-                            (challenge.duration || 30)) *
-                            100
-                        )}
-                        % başarı
-                      </p>
-                      <small>
-                        Tamamlandı:{" "}
-                        {new Date(challenge.startDate).toLocaleDateString(
-                          "tr-TR"
-                        )}
-                      </small>
-                    </div>
-                    <button
-                      className="rechallenge-btn"
-                      onClick={() => rechallenge(challenge)}
-                      title="Yeniden Başlat"
-                    >
-                      🔄
-                    </button>
-                  </div>
-                  <div className="completed-challenge-progress">
-                    {(
-                      challenge.monthlyProgress ||
-                      Array(challenge.duration || 30).fill(false)
-                    ).map((day, index) => (
-                      <div
-                        key={index}
-                        className={`mini-day ${day ? "completed" : "missed"}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      <button className="add-challenge-btn" onClick={() => setShowForm(true)}>
-        <span>+</span> Yeni Challenge Başlat
-      </button>
+      <div className="tatakae-buttons">
+        <button className="add-challenge-btn" onClick={() => setShowForm(true)}>
+          <span>+</span> Yeni Challenge Başlat
+        </button>
+        <button className="stack-chain-btn" onClick={openStackModal}>
+          <span>⛓️</span> Alışkanlık Zinciri Kur
+        </button>
+      </div>
 
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
@@ -1059,6 +683,14 @@ function Tatakae({ soundEnabled }) {
                 setNewChallenge({ ...newChallenge, name: e.target.value })
               }
             />
+            <p style={{
+              fontSize: '12px', 
+              color: 'rgba(67, 233, 123, 0.8)', 
+              marginTop: '8px',
+              fontWeight: '500'
+            }}>
+              ⚡ İpucun: En basit 2 dakikalık versiyonla başla! (ör: "1 sayfa oku", "5 şınav çek", "1 dakika nefes al")
+            </p>
 
             <div className="icon-selector">
               <p>İkon seç:</p>
@@ -1093,7 +725,6 @@ function Tatakae({ soundEnabled }) {
               </div>
             </div>
 
-            {/* 🆕 SÜRELİK SEÇİCİSİ */}
             <div className="duration-selector">
               <p>Challenge süresi seç:</p>
               <div className="duration-grid">
@@ -1124,34 +755,6 @@ function Tatakae({ soundEnabled }) {
               </div>
             </div>
 
-            <div className="difficulty-selector">
-              <p>Zorluk seviyesi seç:</p>
-              <div className="difficulty-grid">
-                {difficultyLevels.map((level) => (
-                  <div
-                    key={level.id}
-                    className={`difficulty-option ${
-                      newChallenge.difficulty === level.id ? "selected" : ""
-                    }`}
-                    style={{
-                      "--difficulty-color": level.color,
-                    }}
-                    onClick={() =>
-                      setNewChallenge({ ...newChallenge, difficulty: level.id })
-                    }
-                  >
-                    <div className="difficulty-emoji">{level.emoji}</div>
-                    <div className="difficulty-info">
-                      <span className="difficulty-name">{level.name}</span>
-                      <span className="difficulty-desc">
-                        {level.description}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <div className="description-selector">
               <p>Bu challenge'ı neden yapmak istiyorsun?</p>
               <textarea
@@ -1165,6 +768,24 @@ function Tatakae({ soundEnabled }) {
                 }
                 rows="3"
               />
+            </div>
+
+            <div className="bundle-selector">
+              <p>🎁 Temptation Bundling - Sevdiğin şeyi sadece bu challenge ile birleştir!</p>
+              <input
+                type="text"
+                placeholder="Sevdiğin şeyi yaz... (ör: Netflix izlemek, Müzik dinlemek, Atlıstırmalık yemek)"
+                value={newChallenge.bundlePartner}
+                onChange={(e) =>
+                  setNewChallenge({
+                    ...newChallenge,
+                    bundlePartner: e.target.value,
+                  })
+                }
+              />
+              <p style={{ fontSize: '12px', color: 'rgba(204, 201, 220, 0.6)', marginTop: '8px' }}>
+                Örnek: "Podcast dinlerken sadece koşuyorum" veya "Sevdiğim müziği sadece çalışırken dinliyorum"
+              </p>
             </div>
 
             <div className="form-buttons">
@@ -1194,28 +815,20 @@ function Tatakae({ soundEnabled }) {
               <div className="challenge-info">
                 <span className="challenge-icon">{challenge.icon}</span>
                 <div className="challenge-details">
-                  <div className="challenge-title-row">
-                    <span className="challenge-name">{challenge.name}</span>
-                    <div
-                      className="difficulty-badge"
-                      style={{
-                        "--difficulty-color":
-                          difficultyLevels.find(
-                            (d) => d.id === challenge.difficulty
-                          )?.color || "#667eea",
-                      }}
-                    >
-                      {difficultyLevels.find(
-                        (d) => d.id === challenge.difficulty
-                      )?.emoji || "🟡"}
-                      {difficultyLevels.find(
-                        (d) => d.id === challenge.difficulty
-                      )?.name || "Orta"}
-                    </div>
-                  </div>
+                  <span className="challenge-name">{challenge.name}</span>
                   <span className="challenge-status">
                     {getChallengeStatus(challenge)}
                   </span>
+                  {challenge.stackTrigger && (
+                    <span className="stack-trigger">
+                      🔗 {challenge.stackTrigger} → {challenge.name}
+                    </span>
+                  )}
+                  {challenge.bundlePartner && (
+                    <span className="bundle-partner">
+                      🎁 {challenge.name} + {challenge.bundlePartner}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="challenge-stats">
@@ -1228,17 +841,6 @@ function Tatakae({ soundEnabled }) {
                 >
                   💬
                 </button>
-                <div className="points-display">
-                  <span className="current-points">
-                    {challenge.currentPoints || 0}
-                  </span>
-                  <span className="points-separator">/</span>
-                  <span className="total-points">
-                    {challenge.totalPossiblePoints ||
-                      (challenge.duration || 30) * 2}
-                  </span>
-                  <span className="points-label">puan</span>
-                </div>
                 {challenge.missedDays > 0 && (
                   <div className="penalty-stats">
                     <span className="missed-days">
@@ -1253,10 +855,7 @@ function Tatakae({ soundEnabled }) {
                     )}
                     style={{
                       "--progress": `${getCompletionPercentage(challenge)}%`,
-                      "--difficulty-color":
-                        difficultyLevels.find(
-                          (d) => d.id === challenge.difficulty
-                        )?.color || "#667eea",
+                      "--difficulty-color": challenge.color || "#667eea",
                     }}
                   >
                     <div className="progress-fill"></div>
@@ -1278,14 +877,18 @@ function Tatakae({ soundEnabled }) {
                 </div>
                 <div className="completed-count">
                   {challenge.completedDays || 0}/{challenge.duration || 30}
+                  {challenge.monthsCompleted > 0 && (
+                    <span className={`months-completed ${getDiamondClass(challenge.monthsCompleted)}`}>
+                      💎{challenge.monthsCompleted}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
             {challenge.recoveryMode && (
               <div className="recovery-notification">
-                🔄 <strong>Recovery Mode:</strong> Bugün tamamlarsan çift puan
-                kazanırsın!
+                🔄 <strong>Recovery Mode:</strong> Bugün tamamlarsan ekstra motivasyon kazanırsın!
               </div>
             )}
 
@@ -1311,23 +914,7 @@ function Tatakae({ soundEnabled }) {
               ))}
             </div>
 
-            {/* 🆕 EXTEND BUTONU */}
-            {canExtend(challenge) && (
-              <div className="extend-notification">
-                <p>
-                  🎉 1 haftalık challenge'ı tamamladın! Daha da ilerlemek ister
-                  misin?
-                </p>
-                <button
-                  className="extend-btn"
-                  onClick={() => extendChallenge(challenge)}
-                >
-                  📈 1 Aya Uzat (Progress korunur)
-                </button>
-              </div>
-            )}
-
-            {isExpired(challenge) && !canExtend(challenge) && (
+            {isExpired(challenge) && (
               <div className="challenge-completed-badge">
                 🎉 Challenge Tamamlandı!
                 <span>
@@ -1397,6 +984,117 @@ function Tatakae({ soundEnabled }) {
                 onClick={() => updateDescription(showDescription.id)}
               >
                 Güncelle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStackModal && (
+        <div className="modal-overlay" onClick={() => setShowStackModal(false)}>
+          <div className="stack-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>⛓️ Alışkanlık Zinciri Kur</h3>
+            <p style={{
+              textAlign: "center",
+              color: "rgba(204, 201, 220, 0.7)",
+              fontSize: "14px",
+              marginBottom: "20px"
+            }}>
+              Mevcut alışkanlıklarınızı bir tetikleyiciye bağlayın!
+            </p>
+
+            <div className="stack-challenges-list">
+              {challenges.filter(c => !isExpired(c)).map((challenge) => (
+                <div key={challenge.id} className="stack-challenge-item">
+                  <div className="stack-challenge-info">
+                    <span className="challenge-icon">{challenge.icon}</span>
+                    <span className="challenge-name">{challenge.name}</span>
+                  </div>
+                  <div className="stack-trigger-input">
+                    <input
+                      type="text"
+                      placeholder="Tetikleyici... (ör: Kahve içtikten sonra, Dişlerimi fırçaladıktan sonra)"
+                      value={stackTriggers[challenge.id] || ""}
+                      onChange={(e) => setStackTriggers({
+                        ...stackTriggers,
+                        [challenge.id]: e.target.value
+                      })}
+                    />
+                    {stackTriggers[challenge.id] && (
+                      <div className="stack-preview">
+                        "{stackTriggers[challenge.id]} → {challenge.name}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {challenges.filter(c => !isExpired(c)).length === 0 && (
+              <div className="empty-stack-state">
+                <p>Aktif challenge'ınız bulunmuyor.</p>
+                <p>Önce bir challenge başlatın!</p>
+              </div>
+            )}
+
+            <div className="stack-buttons">
+              <button onClick={() => setShowStackModal(false)}>İptal</button>
+              <button 
+                onClick={updateStackTriggers} 
+                className="save-stack-btn"
+                disabled={Object.values(stackTriggers).every(trigger => !trigger?.trim())}
+              >
+                Zincirleri Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Extend Modal - 1 Hafta → 1 Ay Uzatma */}
+      {showExtendModal && (
+        <div className="modal-overlay" onClick={() => setShowExtendModal(null)}>
+          <div className="extend-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="extend-header">
+              <div className="extend-icon">🎉</div>
+              <h3>Tebrikler! 1 Haftalık Challenge Tamamlandı!</h3>
+              <p>{showExtendModal.icon} <strong>{showExtendModal.name}</strong> challenge'ını başarıyla tamamladın!</p>
+            </div>
+            
+            <div className="extend-stats">
+              <div className="stat-item">
+                <span className="stat-value">{showExtendModal.completedDays || 0}/7</span>
+                <span className="stat-label">Gün Tamamlandı</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{Math.round(((showExtendModal.completedDays || 0) / 7) * 100)}%</span>
+                <span className="stat-label">Başarı Oranı</span>
+              </div>
+            </div>
+            
+            <div className="extend-question">
+              <h4>📈 1 Aya Uzatmak İster misin?</h4>
+              <p>Mevcut ilerleme korunacak ve 23 gün daha eklenecek!</p>
+              <ul className="extend-benefits">
+                <li>✅ İlk 7 günün korunur</li>
+                <li>✅ 23 gün daha challenge yap</li>
+                <li>✅ Toplam 1 aylık alışkanlık oluştur</li>
+                <li>✅ Tamamlarsan 💎 elmas rozetin kazan!</li>
+              </ul>
+            </div>
+            
+            <div className="extend-buttons">
+              <button 
+                onClick={() => setShowExtendModal(null)}
+                className="extend-decline"
+              >
+                Hayır, Şimdilik Bu Kadar Yeter
+              </button>
+              <button 
+                onClick={() => extendToMonth(showExtendModal)}
+                className="extend-accept"
+              >
+                📈 Evet, 1 Aya Uzat!
               </button>
             </div>
           </div>

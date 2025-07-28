@@ -84,29 +84,19 @@ body {
   filter: drop-shadow(0 0 10px #48dbfb);
 }
 
-.tab:nth-child(2).active {  /* TATAKAE */
-  color: #ff6b6b;
-  filter: drop-shadow(0 0 10px #ff6b6b);
+.tab:nth-child(2).active {  /* TATAKAE - HAVALİ YEŞİL */
+  color: #00d084;
+  filter: drop-shadow(0 0 15px #00d084);
 }
 
-.tab:nth-child(3).active {  /* H- */
-  color: #feca57;
-  filter: drop-shadow(0 0 10px #feca57);
+.tab:nth-child(3).active {  /* H- - HAVALİ KIRMIZI */
+  color: #ff3838;
+  filter: drop-shadow(0 0 15px #ff3838);
 }
 
-.tab:nth-child(4).active {  /* SOLO */
-  color: #ff9ff3;
-  filter: drop-shadow(0 0 10px #ff9ff3);
-}
-
-.tab:nth-child(5).active {  /* RECURSIVE */
-  color: #54a0ff;
-  filter: drop-shadow(0 0 10px #54a0ff);
-}
-
-.tab:nth-child(6).active {  /* SETTINGS */
-  color: #43e97b;
-  filter: drop-shadow(0 0 10px #43e97b);
+.tab:nth-child(4).active {  /* SETTINGS - TURUNCU */
+  color: #ff9500;
+  filter: drop-shadow(0 0 12px #ff9500);
 }
 
 .content {

@@ -5,11 +5,9 @@ import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import Auth from "./components/Auth";
-import Solo from "./components/Solo";
-import Dashboard from "./components/Dashboard";
+import Main from "./components/Main";
 import Tatakae from "./components/Tatakae";
 import HMinus from "./components/HMinus";
-import Recursive from "./components/Recursive";
 import Settings from "./components/Settings";
 
 function App() {
@@ -31,8 +29,8 @@ function App() {
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
-            console.log("📄 User data yüklendi");
-            setUserData(userDoc.data());
+          console.log("📄 User data yüklendi");
+          setUserData(userDoc.data());
           } else {
             console.log("❌ User document bulunamadı");
           }
@@ -40,8 +38,8 @@ function App() {
           console.error("🚨 Firestore hatası:", error);
         }
       } else {
-        setUser(null);
-        setUserData(null);
+      setUser(null);
+      setUserData(null);
       }
       
       console.log("⏰ Loading false yapılıyor...");
@@ -59,9 +57,7 @@ function App() {
     { id: 0, name: "MAIN", icon: "🌟" },
     { id: 1, name: "TATAKAE", icon: "⚡" },
     { id: 2, name: "H-", icon: "🚫" },
-    { id: 3, name: "SOLO", icon: "🔥" },
-    { id: 4, name: "RECURSIVE", icon: "♾️" },
-    { id: 5, name: "SETTINGS", icon: "⚙️" },
+    { id: 3, name: "SETTINGS", icon: "⚙️" },
   ];
 
   const handleTabSwitch = (tabId) => {
@@ -90,16 +86,11 @@ function App() {
 
       <div className="content">
         {activeTab === 0 && (
-          <Dashboard
-            userData={userData}
-            setUserData={setUserData}
-          />
+          <Main user={user} userData={userData} setActiveTab={setActiveTab} />
         )}
         {activeTab === 1 && <Tatakae />}
         {activeTab === 2 && <HMinus />}
-        {activeTab === 3 && <Solo />}
-        {activeTab === 4 && <Recursive />}
-        {activeTab === 5 && (
+        {activeTab === 3 && (
           <Settings 
             onLogout={handleLogout}
           />

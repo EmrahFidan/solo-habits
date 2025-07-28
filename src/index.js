@@ -16,10 +16,10 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("/service-worker.js")
       .then((registration) => {
-        console.log("✅ SW registered: ", registration);
+        // Service Worker başarıyla kaydedildi
       })
       .catch((registrationError) => {
-        console.log("❌ SW registration failed: ", registrationError);
+        console.error("❌ SW registration failed:", registrationError);
       });
   });
 }

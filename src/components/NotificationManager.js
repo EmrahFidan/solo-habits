@@ -1,7 +1,7 @@
 class NotificationManager {
   constructor() {
-    this.permission = Notification.permission;
     this.settings = this.loadSettings();
+    // Permission kontrolü kaldırıldı - otomatik çalışacak
   }
 
   // Settings'i localStorage'dan yükle
@@ -67,56 +67,82 @@ class NotificationManager {
     console.log('💾 Settings saved:', this.settings);
   }
 
-  // Permission iste - Android optimizasyonu ile
+  // Permission iste - Kaldırıldı, otomatik çalışacak
   async requestPermission() {
-    if ('Notification' in window) {
-      // Android Chrome'da özel durum kontrolü
-      if (navigator.userAgent.includes('Android')) {
-        console.log('🤖 Android device detected');
-      }
-      
-      const permission = await Notification.requestPermission();
-      this.permission = permission;
-      
-      // Permission durumunu localStorage'a kaydet
-      localStorage.setItem('notification-permission', permission);
-      console.log('🔔 Notification permission:', permission);
-      return permission === 'granted';
-    }
-    return false;
+    console.log('🔔 Bildirimlerde izin gerekmiyor - otomatik aktif');
+    return true; // Her zaman true döner
   }
 
-  // Service Worker notification - Android için optimize edilmiş
+  // Custom notification göster - Browser izni gerektirmez
   async showNotification(title, options = {}) {
-    if (this.permission !== 'granted') return;
+    console.log(`🔔 ${title}`);
+    console.log(`📝 ${options.body}`);
+    
+    // Custom toast notification oluştur
+    this.createToastNotification(title, options.body);
+    
+    return true;
+  }
 
-    // Android için optimize edilmiş ayarlar
-    const defaultOptions = {
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      vibrate: [200, 100, 200],
-      requireInteraction: false,
-      tag: 'solo-leveling',
-      // Android için ek ayarlar
-      silent: false,
-      renotify: false,
-      timestamp: Date.now(),
-      ...options
-    };
-
-    if ('serviceWorker' in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        return await registration.showNotification(title, defaultOptions);
-      } catch (error) {
-        console.error('Service Worker notification error:', error);
-        // Fallback: Browser notification
-        return new Notification(title, defaultOptions);
-      }
-    } else {
-      // Fallback: Direct browser notification
-      return new Notification(title, defaultOptions);
+  // Custom toast notification oluştur
+  createToastNotification(title, body) {
+    // Mevcut toast'ları temizle
+    const existingToasts = document.querySelectorAll('.toast-notification');
+    existingToasts.forEach(toast => toast.remove());
+    
+    // Yeni toast oluştur
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `
+      <div class="toast-header">${title}</div>
+      <div class="toast-body">${body}</div>
+    `;
+    
+    // CSS stilleri ekle
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      z-index: 10000;
+      max-width: 300px;
+      animation: slideIn 0.3s ease-out;
+    `;
+    
+    // CSS animasyon ekle
+    if (!document.querySelector('#toast-styles')) {
+      const style = document.createElement('style');
+      style.id = 'toast-styles';
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-header {
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+        .toast-body {
+          font-size: 14px;
+          opacity: 0.9;
+        }
+      `;
+      document.head.appendChild(style);
     }
+    
+    document.body.appendChild(toast);
+    
+    // 4 saniye sonra otomatik kaldır
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => toast.remove(), 300);
+      }
+    }, 4000);
   }
 
   // 🌅 Günlük hatırlatma
@@ -169,15 +195,12 @@ class NotificationManager {
     });
   }
 
-  // Debug bilgileri - Android için
+  // Debug bilgileri - güncellenmiş
   debugInfo() {
     console.log('🔍 Notification Debug Info:');
-    console.log('Permission:', this.permission);
+    console.log('Custom Notifications: Aktif');
     console.log('Settings:', this.settings);
     console.log('User Agent:', navigator.userAgent);
-    console.log('Service Worker Support:', 'serviceWorker' in navigator);
-    console.log('Notification Support:', 'Notification' in window);
-    console.log('Protocol:', window.location.protocol);
   }
 }
 
