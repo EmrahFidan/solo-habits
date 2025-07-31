@@ -1,8 +1,9 @@
 .main-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 20px 40px;
+  max-width: none;
+  margin: 0;
   min-height: 100vh;
+  width: 100%;
 }
 
 .main-content {
@@ -55,15 +56,13 @@
 
 .tip-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 20px;
 }
 
 .tip-header h2 {
-  color: #feca57;
-  font-size: 1.8rem;
-  margin: 0;
+  display: none;
 }
 
 .tip-buttons {
@@ -628,9 +627,9 @@
 
 /* H- özel tema - TATAKAE'ye benzer vibrant renkler */
 .personal-best-section.h-minus-best {
-  background: rgba(255, 107, 107, 0.08);
-  border: 1px solid rgba(255, 107, 107, 0.2);
-  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.1);
+  background: rgba(255, 107, 107, 0.03);
+  border: 1px solid rgba(255, 107, 107, 0.08);
+  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.05);
 }
 
 .personal-best-section.h-minus-best .personal-best-header h2 {
@@ -710,19 +709,54 @@
   max-width: 100%;
 }
 
+/* PC için personal best grid özel optimizasyonu */
+@media screen and (min-width: 1025px) {
+  .personal-best-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: none;
+    margin: 20px 60px 0 60px;
+  }
+  
+  .best-card {
+    padding: 16px 20px;
+    min-height: 100px;
+  }
+  
+  .card-icon {
+    font-size: 2.2rem;
+    width: 50px;
+    height: 50px;
+  }
+  
+  .value-number {
+    font-size: 1.8rem;
+  }
+  
+  .card-title {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+  
+  .card-subtitle {
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+}
+
 .best-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   border-radius: 15px;
   padding: 20px;
   display: flex;
   align-items: center;
   gap: 15px;
   transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 }
 
 .best-card::before {
@@ -781,11 +815,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 50%;
   flex-shrink: 0;
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .card-content {
@@ -931,41 +965,41 @@
   }
 }
 
-/* H- Kartları için özel stiller */
+/* H- Kartları için soft stiller - TATAKAE benzeri */
 .h-minus-best .clean-streak-card {
-  border-left: 4px solid #4ecdc4;
-  background: rgba(78, 205, 196, 0.05);
-  border: 1px solid rgba(78, 205, 196, 0.15);
+  border-left: 4px solid #78c5c1;
+  background: rgba(78, 205, 196, 0.03);
+  border: 1px solid rgba(78, 205, 196, 0.08);
 }
 
 .h-minus-best .clean-streak-card:hover {
   border-left-color: #44a08d;
-  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.15);
-  background: rgba(78, 205, 196, 0.08);
+  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.08);
+  background: rgba(78, 205, 196, 0.05);
 }
 
 .h-minus-best .clean-month-card {
-  border-left: 4px solid #48cae4;
-  background: rgba(72, 202, 228, 0.05);
-  border: 1px solid rgba(72, 202, 228, 0.15);
+  border-left: 4px solid #5ab5d1;
+  background: rgba(72, 202, 228, 0.03);
+  border: 1px solid rgba(72, 202, 228, 0.08);
 }
 
 .h-minus-best .clean-month-card:hover {
   border-left-color: #0077b6;
-  box-shadow: 0 6px 20px rgba(72, 202, 228, 0.15);
-  background: rgba(72, 202, 228, 0.08);
+  box-shadow: 0 6px 20px rgba(72, 202, 228, 0.08);
+  background: rgba(72, 202, 228, 0.05);
 }
 
 .h-minus-best .clean-diamonds-card {
-  border-left: 4px solid #96e6a1;
-  background: rgba(150, 230, 161, 0.05);
-  border: 1px solid rgba(150, 230, 161, 0.15);
+  border-left: 4px solid #87d3a0;
+  background: rgba(150, 230, 161, 0.03);
+  border: 1px solid rgba(150, 230, 161, 0.08);
 }
 
 .h-minus-best .clean-diamonds-card:hover {
   border-left-color: #74c69d;
-  box-shadow: 0 6px 20px rgba(150, 230, 161, 0.15);
-  background: rgba(150, 230, 161, 0.08);
+  box-shadow: 0 6px 20px rgba(150, 230, 161, 0.08);
+  background: rgba(150, 230, 161, 0.05);
 }
 
 /* TATAKAE Kartları için özel stiller */

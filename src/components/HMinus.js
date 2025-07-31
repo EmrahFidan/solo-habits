@@ -402,10 +402,10 @@ function HMinus({ soundEnabled }) {
 
       <div className="h-minus-buttons">
         <button className="add-bad-habit-btn" onClick={() => setShowForm(true)}>
-          <span>+</span> Bırakmak istediğin bir alışkanlık ekle
+          <span>+</span> Alışkanlık Ekle
         </button>
         <button className="blocker-chain-btn" onClick={openBlockerModal}>
-          <span>🛡️</span> Engelleyici Zincir Kur
+          <span>🛡️</span> Engelleyici Kur
         </button>
       </div>
 

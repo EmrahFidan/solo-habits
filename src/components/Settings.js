@@ -279,25 +279,22 @@ function Settings({ onLogout }) {
 
         {/* Günün Başlangıç Saati */}
         <div className="setting-item">
-          <label>
-            <span>🌅 Günün Başlangıç Saati</span>
-            <div className="time-picker">
-              <span>Gün saat</span>
-              <select
-                value={userSettings.dayStartTime}
-                onChange={(e) => handleDayStartTimeChange(e.target.value)}
-                disabled={saving}
-                className="time-select-dropdown"
-              >
-                {timeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <span>itibariyle başlar</span>
-            </div>
-          </label>
+          <div className="time-picker">
+            <span>Gün saat</span>
+            <select
+              value={userSettings.dayStartTime}
+              onChange={(e) => handleDayStartTimeChange(e.target.value)}
+              disabled={saving}
+              className="time-select-dropdown"
+            >
+              {timeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <span>itibariyle başlar</span>
+          </div>
         </div>
 
         <div className="data-info">

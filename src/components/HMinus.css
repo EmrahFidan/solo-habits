@@ -1499,50 +1499,46 @@
 /* Buttons Container */
 .h-minus-buttons {
   display: flex;
-  gap: clamp(0.75rem, 3vw, 1rem);
-  margin-bottom: clamp(1rem, 4vw, 2rem);
+  gap: 15px;
+  margin-bottom: 25px;
   flex-wrap: wrap;
 }
 
 .add-bad-habit-btn {
   flex: 1;
   min-width: 200px;
-  padding: clamp(0.75rem, 3vw, 1rem);
+  padding: 12px;
   background: linear-gradient(135deg, #ff9500, #f57c00);
   border: none;
-  border-radius: var(--radius-lg, 12px);
+  border-radius: 12px;
   color: white;
-  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-size: 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.5rem, 2vw, 0.75rem);
-  transition: all var(--transition-base, 0.3s ease);
+  gap: 8px;
+  transition: transform 0.2s;
   font-weight: 600;
-  min-height: 50px;
-  backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(255, 149, 0, 0.3);
 }
 
 .blocker-chain-btn {
   flex: 1;
   min-width: 200px;
-  padding: clamp(0.75rem, 3vw, 1rem);
+  padding: 12px;
   background: linear-gradient(135deg, #e53e3e, #c62828);
   border: none;
-  border-radius: var(--radius-lg, 12px);
+  border-radius: 12px;
   color: white;
-  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-size: 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.5rem, 2vw, 0.75rem);
-  transition: all var(--transition-base, 0.3s ease);
+  gap: 8px;
+  transition: transform 0.2s;
   font-weight: 600;
-  min-height: 50px;
-  backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
 }
 
@@ -1715,7 +1711,8 @@
    RESPONSIVE UPDATES FOR BLOCKER FEATURE
    ========================================================================== */
 
-@media screen and (max-width: 640px) {
+/* TELEFON (5.5 inç ~ 414px genişlik) */
+@media screen and (max-width: 480px) {
   .h-minus-buttons {
     flex-direction: column;
     gap: 10px;
@@ -2232,6 +2229,32 @@
   
   .h-minus-best .personal-best-header h2 {
     font-size: 1.5rem;
+  }
+}
+
+/* ==========================================================================
+   PC OPTIMIZATIONS FOR H-MINUS
+   ========================================================================== */
+
+@media screen and (min-width: 1025px) {
+  .h-minus-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    padding-bottom: clamp(6rem, 15vw, 8rem);
+  }
+
+  .h-minus-buttons {
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .add-bad-habit-btn,
+  .blocker-chain-btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px;
+    font-size: 15px;
   }
 }
 

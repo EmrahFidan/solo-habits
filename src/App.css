@@ -191,143 +191,191 @@ h1::after {
   margin-top: 20px;
 }
 
-/* TELEFON (1080 x 2400) */
-@media screen and (max-width: 1080px) {
+/* TELEFON (5.5 inç ~ 414px genişlik) */
+@media screen and (max-width: 480px) {
   .tab-navigation {
-    padding: 8px 20px 12px 20px;
+    padding: 12px 16px 16px 16px;
   }
 
   .tab {
-    padding: 5px 6px;
-    min-width: 55px;
-    margin: 0 2px;
+    padding: 8px 12px;
+    min-width: 60px;
+    min-height: 48px;
+    margin: 0;
   }
 
   .tab-icon {
-    font-size: 18px;
+    font-size: 20px;
+    margin-bottom: 4px;
   }
 
   .tab-name {
-    font-size: 8px;
+    font-size: 12px;
+    font-weight: 500;
   }
 
   .content {
-    padding: 15px;
-    padding-bottom: 90px;
+    padding: 16px 12px;
+    padding-bottom: 85px;
   }
 
   .dashboard {
-    padding-top: 30px;
+    padding-top: 24px;
   }
 
   .rank-circle {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     font-size: 24px;
   }
 
   .user-name {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 28px;
+    margin-top: 24px;
+    line-height: 1.2;
+  }
+
+  .user-profile {
+    gap: 16px;
+  }
+}
+
+/* TABLET (11 inç ~ 768px-1024px genişlik) */
+@media screen and (min-width: 481px) and (max-width: 1024px) {
+  .tab-navigation {
+    padding: 16px 24px 20px 24px;
+  }
+
+  .tab {
+    padding: 12px 16px;
+    min-width: 80px;
+    min-height: 52px;
+    margin: 0;
+  }
+
+  .tab-icon {
     font-size: 22px;
-  }
-
-  h1 {
-    font-size: 28px;
-    margin-top: 30px;
-  }
-
-  .user-profile {
-    gap: 15px;
-  }
-}
-
-/* TABLET (2560 x 1600) */
-@media screen and (min-width: 1081px) and (max-width: 2560px) {
-  .tab-navigation {
-    padding: 12px 30px 18px 30px;
-  }
-
-  .tab {
-    padding: 8px 10px;
-    min-width: 70px;
-    margin: 0 4px;
-  }
-
-  .tab-icon {
-    font-size: 24px;
+    margin-bottom: 4px;
   }
 
   .tab-name {
-    font-size: 11px;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   .content {
-    padding: 25px;
-    padding-bottom: 120px;
-  }
-
-  .rank-circle {
-    width: 85px;
-    height: 85px;
-    font-size: 32px;
-  }
-
-  .user-name {
-    font-size: 30px;
-  }
-
-  h1 {
-    font-size: 42px;
-  }
-
-  .user-profile {
-    gap: 25px;
-  }
-}
-
-/* PC (2560px üzeri) */
-@media screen and (min-width: 2561px) {
-  .tab-navigation {
-    padding: 16px 50px 22px 50px;
-  }
-
-  .tab {
-    padding: 12px 15px;
-    min-width: 90px;
-    margin: 0 6px;
-  }
-
-  .tab-icon {
-    font-size: 28px;
-  }
-
-  .tab-name {
-    font-size: 13px;
-  }
-
-  .content {
-    padding: 35px;
-    padding-bottom: 140px;
+    padding: 24px 20px;
+    padding-bottom: 90px;
+    max-width: 720px;
+    margin: 0 auto;
   }
 
   .dashboard {
-    padding-top: 60px;
+    padding-top: 32px;
+  }
+
+  .rank-circle {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+  }
+
+  .user-name {
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 32px;
+    margin-top: 32px;
+    line-height: 1.2;
+  }
+
+  .user-profile {
+    gap: 20px;
+  }
+}
+
+/* PC (16 inç ~ 1025px üzeri genişlik) */
+@media screen and (min-width: 1025px) {
+  .tab-navigation {
+    padding: 20px;
+    max-width: none;
+    width: 100%;
+    justify-content: center;
+    gap: 60px;
+  }
+
+  .tab {
+    padding: 18px 40px;
+    min-width: 160px;
+    min-height: 72px;
+    margin: 0;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+  }
+
+  .tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .tab.active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .tab-icon {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  .tab-name {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .content {
+    padding: 32px 40px;
+    padding-bottom: 100px;
+    max-width: none;
+    margin: 0;
+    width: 100%;
+  }
+
+  .dashboard {
+    padding-top: 32px;
   }
 
   .rank-circle {
     width: 100px;
     height: 100px;
-    font-size: 40px;
+    font-size: 42px;
   }
 
   .user-name {
-    font-size: 36px;
+    font-size: 32px;
+    font-weight: 600;
   }
 
   h1 {
     font-size: 48px;
+    margin-top: 32px;
+    line-height: 1.1;
+    font-weight: 700;
   }
 
   .user-profile {
-    gap: 35px;
+    gap: 32px;
   }
 }
