@@ -3,7 +3,7 @@ import { db, auth } from "../firebase";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import "./Settings.css";
 
-function Settings({ onLogout }) {
+function Settings({ onLogout, setActiveTab, openGuide }) {
   const [userSettings, setUserSettings] = useState({
     dayStartTime: "00:00",
     notifications: {
@@ -269,6 +269,9 @@ function Settings({ onLogout }) {
   return (
     <div className="settings-container">
       <div className="settings-header">
+        <div className="back-button" onClick={() => setActiveTab(0)} title="Ana Sayfaya Dön">
+          ← Ana Sayfa
+        </div>
         <h1>⚙️ AYARLAR</h1>
         <p>Uygulama ve zaman ayarları</p>
       </div>
@@ -382,6 +385,24 @@ function Settings({ onLogout }) {
           </div>
         </div>
       )}
+
+      {/* Kılavuz ve Yardım */}
+      <div className="settings-section">
+        <h3>📚 Yardım & Kılavuz</h3>
+        
+        <div className="help-actions">
+          <button 
+            className="guide-btn-settings" 
+            onClick={() => openGuide && openGuide()}
+          >
+            📖 Uygulama Kılavuzunu Görüntüle
+          </button>
+          <p className="guide-description">
+            Solo Habits uygulamasının nasıl kullanılacağını öğrenmek için 
+            interaktif kılavuzu görüntüleyin.
+          </p>
+        </div>
+      </div>
 
       {/* Hakkında */}
       <div className="settings-section">

@@ -14,6 +14,37 @@
 .main-header {
   text-align: center;
   margin-bottom: 40px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.settings-icon {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #fff;
+  padding: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.settings-icon:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
 }
 
 .main-header h1 {
@@ -42,6 +73,8 @@
   font-weight: 600;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
   margin-top: 10px;
+  max-width: calc(100% - 80px);
+  text-align: center;
 }
 
 .badge-icon {
@@ -504,6 +537,15 @@
     font-size: 0.85rem;
     padding: 10px 16px;
     margin-top: 15px;
+    max-width: calc(100% - 60px);
+  }
+
+  .settings-icon {
+    font-size: 1.3rem;
+    width: 35px;
+    height: 35px;
+    top: 10px;
+    right: 10px;
   }
 
   .tip-header {

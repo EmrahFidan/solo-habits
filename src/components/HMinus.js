@@ -22,7 +22,6 @@ function HMinus({ soundEnabled }) {
     color: "#ff6b6b",
     description: "",
     duration: 30,
-    aversionPartner: "", // Aversion Bundling için
     consequenceReminder: "", // Olumsuz sonuç hatırlatması
   });
   const [showConfirm, setShowConfirm] = useState(null);
@@ -30,7 +29,6 @@ function HMinus({ soundEnabled }) {
   const [updatedDescription, setUpdatedDescription] = useState("");
   const [showBlockerModal, setShowBlockerModal] = useState(false);
   const [blockerTriggers, setBlockerTriggers] = useState({});
-  const [showExtendModal, setShowExtendModal] = useState(null); // 1 hafta → 1 ay uzatma modal'ı
 
   const durationOptions = [
     { value: 7, label: "1 Hafta", days: 7, description: "Kısa süreli deneme" },
@@ -109,24 +107,9 @@ function HMinus({ soundEnabled }) {
         (h) => getDaysSinceStart(h.startDate) < (h.duration || 30)
       );
       setBadHabits(active);
-      
-      // 7 günlük takip için otomatik uzatma kontrolü
-      active.forEach(badHabit => {
-        const daysSinceStart = getDaysSinceStart(badHabit.startDate);
-        if (badHabit.duration === 7 && daysSinceStart >= 6 && !badHabit.isExtended) {
-          const cleanDays = badHabit.cleanDays || 0;
-          const successRate = Math.round((cleanDays / 7) * 100);
-          if (successRate >= 70) {
-            // Modal zaten açık değilse aç
-            if (!showExtendModal || showExtendModal.id !== badHabit.id) {
-              setShowExtendModal(badHabit);
-            }
-          }
-        }
-      });
     });
     return unsubscribe;
-  }, [showExtendModal]);
+  }, []);
 
 
   const getDaysSinceStart = (startDate) => {
@@ -167,6 +150,7 @@ function HMinus({ soundEnabled }) {
       const isCurrent = currentTime === todayTime;
       const isPast = currentTime < todayTime;
       const isFuture = currentTime > todayTime;
+      const isMissed = isPast && progress[index] === null; // Geçmiş günlerde null olanlar missed
 
       return {
         dayNumber,
@@ -174,6 +158,7 @@ function HMinus({ soundEnabled }) {
         dayName: dayNames[currentDate.getDay()],
         isClean,
         isRelapse,
+        isMissed,
         isCurrent,
         isPast,
         isFuture,
@@ -212,44 +197,11 @@ function HMinus({ soundEnabled }) {
       color: "#ff6b6b",
       description: "",
       duration: 30,
-      aversionPartner: "", // Aversion partner'ı da temizle
       consequenceReminder: "", // Consequence reminder'ı da temizle
     });
     setShowForm(false);
   };
 
-  const extendToMonth = async (badHabit) => {
-    if (badHabit.duration !== 7) return;
-    
-    const newDuration = 30;
-    const currentProgress = badHabit.monthlyProgress || Array(7).fill(null);
-    const extendedProgress = [...currentProgress, ...Array(23).fill(null)];
-    
-    await updateDoc(doc(db, "h-minus", badHabit.id), {
-      duration: newDuration,
-      monthlyProgress: extendedProgress,
-      isExtended: true,
-      extendedAt: new Date(),
-    });
-    
-    setShowExtendModal(null);
-  };
-
-  const checkForExtendOffer = (badHabit) => {
-    const daysSinceStart = getDaysSinceStart(badHabit.startDate);
-    const duration = badHabit.duration || 30;
-    
-    // 7 günlük takip tamamlandıysa ve henüz uzatılmadıysa
-    if (duration === 7 && daysSinceStart >= 6 && !badHabit.isExtended) {
-      const cleanDays = badHabit.cleanDays || 0;
-      const successRate = Math.round((cleanDays / 7) * 100);
-      
-      // En az %70 başarı oranı varsa uzatma öner
-      if (successRate >= 70) {
-        setShowExtendModal(badHabit);
-      }
-    }
-  };
 
   const toggleDay = async (badHabit, dayIndex) => {
     const daysSinceStart = getDaysSinceStart(badHabit.startDate);
@@ -300,10 +252,6 @@ function HMinus({ soundEnabled }) {
       lastUpdated: new Date(),
     });
     
-    // 7 günlük takip tamamlandıysa uzatma öner
-    if (duration === 7 && daysSinceStart >= 5 && newState === true) {
-      setTimeout(() => checkForExtendOffer(badHabit), 1000);
-    }
     
     // 30 günlük takip tamamlandıysa aylık rozet ekle
     if (duration === 30 && daysSinceStart >= 29) {
@@ -401,10 +349,10 @@ function HMinus({ soundEnabled }) {
 
 
       <div className="h-minus-buttons">
-        <button className="add-bad-habit-btn" onClick={() => setShowForm(true)}>
+        <button className="hminus-add-bad-habit-btn" onClick={() => setShowForm(true)}>
           <span>+</span> Alışkanlık Ekle
         </button>
-        <button className="blocker-chain-btn" onClick={openBlockerModal}>
+        <button className="hminus-blocker-chain-btn" onClick={openBlockerModal}>
           <span>🛡️</span> Engelleyici Kur
         </button>
       </div>
@@ -494,23 +442,6 @@ function HMinus({ soundEnabled }) {
               </div>
             </div>
 
-            <div className="aversion-selector">
-              <p>💥 Aversion Bundling - Bu alışkanlık aklına geldiğinde ne yapacaksın?</p>
-              <input
-                type="text"
-                placeholder="Zorlayıcı/İğrenç aktivite... (ör: 50 şınav çek, Soğuk duş al, 10 dk temizlik yap)"
-                value={newBadHabit.aversionPartner}
-                onChange={(e) =>
-                  setNewBadHabit({
-                    ...newBadHabit,
-                    aversionPartner: e.target.value,
-                  })
-                }
-              />
-              <p style={{ fontSize: '12px', color: 'rgba(204, 201, 220, 0.6)', marginTop: '8px' }}>
-                Örnek: "Sigara içmek istediğimde 50 şınav çekerim" veya "Abur cubur yemek istediğimde soğuk duş alırım"
-              </p>
-            </div>
 
             <div className="consequence-selector">
               <p>📜 Olumsuz Sonuç Hatırlatması - Bu alışkanlığın uzun vadeli zararı nedir?</p>
@@ -532,7 +463,7 @@ function HMinus({ soundEnabled }) {
 
             <div className="form-buttons">
               <button onClick={() => setShowForm(false)}>İptal</button>
-              <button onClick={addBadHabit} className="save-btn">
+              <button onClick={addBadHabit} className="hminus-save-btn">
                 Takibe Başla
               </button>
             </div>
@@ -562,11 +493,6 @@ function HMinus({ soundEnabled }) {
                   {badHabit.blockerTrigger && (
                     <span className="blocker-trigger">
                       🛡️ {badHabit.blockerTrigger} → Pozitif alternatif
-                    </span>
-                  )}
-                  {badHabit.aversionPartner && (
-                    <span className="aversion-partner">
-                      💥 {badHabit.name} → {badHabit.aversionPartner}
                     </span>
                   )}
                   {badHabit.consequenceReminder && (
@@ -623,16 +549,16 @@ function HMinus({ soundEnabled }) {
                   className={`day-box ${
                     box.isCurrent ? "current" : ""
                   } ${
-                    box.isClean ? "clean" : box.isRelapse ? "relapse" : ""
+                    box.isClean ? "clean" : box.isRelapse ? "relapse" : box.isMissed ? "missed" : ""
                   }`}
-                  onDoubleClick={() =>
+                  onClick={() =>
                     box.canToggle && toggleDay(badHabit, index)
                   }
                   style={{ cursor: box.canToggle ? "pointer" : "default" }}
                 >
                   <span className="day-date">{box.date}</span>
                   <span className="day-status">
-                    {box.isClean ? "✓" : box.isRelapse ? "✗" : "○"}
+                    {box.isClean ? "✓" : box.isRelapse ? "✗" : box.isMissed ? "✗" : "○"}
                   </span>
                 </div>
               ))}
@@ -700,7 +626,7 @@ function HMinus({ soundEnabled }) {
             <div className="description-actions">
               <button onClick={() => setShowDescription(null)}>İptal</button> 
               <button
-                className="update-btn"
+                className="hminus-update-btn"
                 onClick={() => updateDescription(showDescription.id)}
               >
                 Güncelle
@@ -773,7 +699,7 @@ function HMinus({ soundEnabled }) {
               <button onClick={() => setShowBlockerModal(false)}>İptal</button>
               <button
                 onClick={updateBlockerTriggers}
-                className="save-blocker-btn"
+                className="hminus-save-blocker-btn"
                 disabled={Object.values(blockerTriggers).every(
                   (trigger) => !trigger?.trim()
                 )}
@@ -785,55 +711,6 @@ function HMinus({ soundEnabled }) {
         </div>
       )}
       
-      {/* Extend Modal - 1 Hafta → 1 Ay Uzatma */}
-      {showExtendModal && (
-        <div className="modal-overlay" onClick={() => setShowExtendModal(null)}>
-          <div className="extend-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="extend-header">
-              <div className="extend-icon">🎉</div>
-              <h3>Tebrikler! 1 Haftalık Takip Tamamlandı!</h3>
-              <p>{showExtendModal.icon} <strong>{showExtendModal.name}</strong> alışkanlığını başarıyla bırakıyorsun!</p>
-            </div>
-            
-            <div className="extend-stats">
-              <div className="stat-item">
-                <span className="stat-value">{showExtendModal.cleanDays || 0}/7</span>
-                <span className="stat-label">Temiz Gün</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{Math.round(((showExtendModal.cleanDays || 0) / 7) * 100)}%</span>
-                <span className="stat-label">Başarı Oranı</span>
-              </div>
-            </div>
-            
-            <div className="extend-question">
-              <h4>📈 1 Aya Uzatmak İster misin?</h4>
-              <p>Mevcut ilerleme korunacak ve 23 gün daha eklenecek!</p>
-              <ul className="extend-benefits">
-                <li>✅ İlk 7 günün korunur</li>
-                <li>✅ 23 gün daha takip et</li>
-                <li>✅ Toplam 1 aylık temiz yaşam</li>
-                <li>✅ Tamamlarsan 💎 elmas rozetin kazan!</li>
-              </ul>
-            </div>
-            
-            <div className="extend-buttons">
-              <button 
-                onClick={() => setShowExtendModal(null)}
-                className="extend-decline"
-              >
-                Hayır, Şimdilik Bu Kadar Yeter
-              </button>
-              <button 
-                onClick={() => extendToMonth(showExtendModal)}
-                className="extend-accept"
-              >
-                📈 Evet, 1 Aya Uzat!
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

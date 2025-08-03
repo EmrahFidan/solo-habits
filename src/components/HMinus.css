@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .progress-container {
-  flex: 1;
+
   max-width: 200px;
   min-width: 80px;
   margin: 0 10px;
@@ -330,7 +330,7 @@
 }
 
 .duration-option {
-  flex: 1;
+
   min-width: 200px;
   display: flex;
   align-items: center;
@@ -365,7 +365,7 @@
   display: flex;
   flex-direction: column;
   gap: clamp(0.125rem, 1vw, 0.25rem);
-  flex: 1;
+
 }
 
 .duration-name {
@@ -421,7 +421,7 @@
   display: flex;
   flex-direction: column;
   gap: clamp(0.125rem, 1vw, 0.25rem);
-  flex: 1;
+
 }
 
 .difficulty-name {
@@ -469,7 +469,7 @@
 }
 
 .form-buttons button {
-  flex: 1;
+
   min-width: 120px;
   padding: clamp(0.75rem, 3vw, 1rem);
   border: none;
@@ -572,7 +572,7 @@
   display: flex;
   align-items: center;
   gap: clamp(0.5rem, 2vw, 0.75rem);
-  flex: 1;
+
   min-width: 0;
 }
 
@@ -585,7 +585,7 @@
   display: flex;
   flex-direction: column;
   gap: clamp(0.25rem, 1vw, 0.375rem);
-  flex: 1;
+
   min-width: 0;
 }
 
@@ -721,53 +721,62 @@
 }
 
 .day-box {
-  aspect-ratio: 1;
-  background: rgba(50, 50, 50, 0.6);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all var(--transition-base, 0.3s ease);
-  border: 2px solid transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.125rem, 0.5vw, 0.25rem);
-  min-height: 40px;
-  position: relative;
-  backdrop-filter: blur(5px);
+  aspect-ratio: 1 !important;
+  background: rgba(100, 100, 100, 0.95) !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all var(--transition-base, 0.3s ease) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(0.125rem, 0.5vw, 0.25rem) !important;
+  min-height: 40px !important;
+  position: relative !important;
+  backdrop-filter: blur(5px) !important;
 }
 
 .day-box:hover {
-  background: rgba(70, 70, 70, 0.8);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: rgba(120, 120, 120, 1) !important;
+  transform: translateY(-2px) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 .day-box.current {
-  background: rgba(102, 126, 234, 0.2);
-  border-color: #667eea;
-  animation: pulse 2s infinite;
+  background: rgba(231, 76, 60, 0.3) !important;
+  border-color: #e74c3c !important;
+  animation: pulse 2s infinite !important;
 }
 
 .day-box.clean {
-  background: rgba(67, 233, 123, 0.2);
-  border-color: #43e97b;
-  color: #43e97b;
-  box-shadow: 0 0 10px rgba(67, 233, 123, 0.2);
+  background: rgba(39, 174, 96, 0.4) !important;
+  border-color: #27ae60 !important;
+  color: #27ae60 !important;
+  box-shadow: 0 0 10px rgba(39, 174, 96, 0.3) !important;
 }
 
 .day-box.current.clean {
-  background: rgba(67, 233, 123, 0.3);
-  border-color: #43e97b;
+  background: rgba(39, 174, 96, 0.5) !important;
+  border-color: #27ae60 !important;
   box-shadow: 0 0 15px rgba(67, 233, 123, 0.4);
 }
 
 .day-box.relapse {
-  background: rgba(255, 107, 107, 0.2);
-  border-color: #ff6b6b;
-  color: #ff6b6b;
-  animation: relapseShake 0.5s ease-in-out;
-  box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+  background: rgba(231, 76, 60, 0.3) !important;
+  border-color: #e74c3c !important;
+  color: #e74c3c !important;
+  animation: relapseShake 0.5s ease-in-out !important;
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.4) !important;
+}
+
+/* Missed days - Kaçırılan günler (koyu gri/siyah) */
+.day-box.missed {
+  background: rgba(60, 60, 60, 0.6) !important;
+  border-color: #666 !important;
+  color: #999 !important;
+  opacity: 0.8 !important;
 }
 
 @keyframes relapseShake {
@@ -1050,7 +1059,7 @@
 }
 
 .completed-habit-info {
-  flex: 1;
+
   min-width: 0;
 }
 
@@ -1451,7 +1460,7 @@
 
   .comment-btn,
   .header-btn,
-  .add-bad-habit-btn,
+  .hminus-add-bad-habit-btn,
   .form-buttons button {
     min-height: 48px;
   }
@@ -1472,13 +1481,13 @@
 .duration-option:focus,
 .difficulty-option:focus,
 .comment-btn:focus,
-.add-bad-habit-btn:focus,
-.blocker-chain-btn:focus {
+.hminus-add-bad-habit-btn:focus,
+.hminus-blocker-chain-btn:focus {
   outline: 2px solid rgba(255, 149, 0, 0.7);
   outline-offset: 2px;
 }
 
-.blocker-chain-btn:focus {
+.hminus-blocker-chain-btn:focus {
   outline: 2px solid rgba(229, 62, 62, 0.7);
   outline-offset: 2px;
 }
@@ -1487,8 +1496,8 @@
 .day-box:focus:not(:focus-visible),
 .icon-option:focus:not(:focus-visible),
 .color-option:focus:not(:focus-visible),
-.add-bad-habit-btn:focus:not(:focus-visible),
-.blocker-chain-btn:focus:not(:focus-visible) {
+.hminus-add-bad-habit-btn:focus:not(:focus-visible),
+.hminus-blocker-chain-btn:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -1502,10 +1511,12 @@
   gap: 15px;
   margin-bottom: 25px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
-.add-bad-habit-btn {
+.hminus-add-bad-habit-btn {
   flex: 1;
+
   min-width: 200px;
   padding: 12px;
   background: linear-gradient(135deg, #ff9500, #f57c00);
@@ -1523,8 +1534,9 @@
   box-shadow: 0 4px 15px rgba(255, 149, 0, 0.3);
 }
 
-.blocker-chain-btn {
+.hminus-blocker-chain-btn {
   flex: 1;
+
   min-width: 200px;
   padding: 12px;
   background: linear-gradient(135deg, #e53e3e, #c62828);
@@ -1542,13 +1554,13 @@
   box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
 }
 
-.add-bad-habit-btn:hover {
+.hminus-add-bad-habit-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(255, 149, 0, 0.4);
   background: linear-gradient(135deg, #ff8f00, #ef6c00);
 }
 
-.blocker-chain-btn:hover {
+.hminus-blocker-chain-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(229, 62, 62, 0.4);
   background: linear-gradient(135deg, #d32f2f, #b71c1c);
@@ -1608,7 +1620,7 @@
 }
 
 .blocker-trigger-input {
-  flex: 1;
+
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1651,7 +1663,7 @@
 }
 
 .blocker-buttons button {
-  flex: 1;
+
   padding: 15px;
   border: none;
   border-radius: 12px;
@@ -1718,8 +1730,9 @@
     gap: 10px;
   }
 
-  .add-bad-habit-btn,
-  .blocker-chain-btn {
+  .hminus-add-bad-habit-btn,
+  .hminus-blocker-chain-btn {
+  flex: 1;
     min-width: 100%;
   }
 
@@ -1762,7 +1775,7 @@
    ACCESSIBILITY & FOCUS UPDATES
    ========================================================================== */
 
-.blocker-chain-btn:focus,
+.hminus-blocker-chain-btn:focus,
 .save-blocker-btn:focus {
   outline: 2px solid rgba(229, 62, 62, 0.7);
   outline-offset: 2px;
@@ -1773,7 +1786,7 @@
   outline-offset: 2px;
 }
 
-.blocker-chain-btn:focus:not(:focus-visible),
+.hminus-blocker-chain-btn:focus:not(:focus-visible),
 .save-blocker-btn:focus:not(:focus-visible) {
   outline: none;
 }
@@ -1800,8 +1813,8 @@
     display: none;
   }
 
-  .add-bad-habit-btn,
-  .blocker-chain-btn,
+  .hminus-add-bad-habit-btn,
+  .hminus-blocker-chain-btn,
   .header-buttons,
   .comment-btn {
     display: none;
@@ -2175,7 +2188,7 @@
 }
 
 .h-minus-best .card-content {
-  flex: 1;
+
   color: white;
 }
 
@@ -2249,9 +2262,10 @@
     gap: 15px;
   }
 
-  .add-bad-habit-btn,
-  .blocker-chain-btn {
-    flex: 1;
+  .hminus-add-bad-habit-btn,
+  .hminus-blocker-chain-btn {
+  flex: 1;
+  
     min-width: 200px;
     padding: 12px;
     font-size: 15px;
@@ -2295,7 +2309,8 @@
     padding: 0 8px;
   }
 
-  .add-bad-habit-btn, .blocker-chain-btn {
+  .hminus-add-bad-habit-btn, .hminus-blocker-chain-btn {
+  flex: 1;
     width: 100%;
     padding: 20px 24px;
     font-size: 1.1rem;
@@ -2307,7 +2322,7 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   }
 
-  .add-bad-habit-btn:hover, .blocker-chain-btn:hover {
+  .hminus-add-bad-habit-btn:hover, .hminus-blocker-chain-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
   }
@@ -2347,7 +2362,7 @@
   }
 
   .bad-habit-details {
-    flex: 1;
+  
     min-width: 0;
   }
 
@@ -2563,7 +2578,7 @@
     min-height: 60px;
     border-radius: 16px;
     font-weight: 700;
-    flex: 1;
+  
   }
 
   /* Personal Best H-Minus Mobile Override */
@@ -2624,7 +2639,8 @@
     font-size: 0.9rem;
   }
 
-  .add-bad-habit-btn, .blocker-chain-btn {
+  .hminus-add-bad-habit-btn, .hminus-blocker-chain-btn {
+  flex: 1;
     padding: 18px 20px;
     font-size: 1rem;
     min-height: 56px;
@@ -2696,5 +2712,120 @@
   .h-minus-best .value-number {
     font-size: 1.6rem;
   }
+}
+
+/* H-MINUS ÖZEL BUTON STİLLERİ */
+
+/* Ana bad habit ekleme butonu - Kırmızı-Siyah */
+.hminus-add-bad-habit-btn {
+
+  min-width: 200px;
+  padding: 12px;
+  background: linear-gradient(135deg, #e74c3c, #1a1a1a);
+  border: 2px solid #e74c3c;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.hminus-add-bad-habit-btn:hover {
+  background: linear-gradient(135deg, #c0392b, #0f0f0f);
+  border-color: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(192, 57, 43, 0.4);
+}
+
+/* Blocker chain butonu - Yeşil-Siyah */
+.hminus-blocker-chain-btn {
+  flex: 1;
+
+  min-width: 200px;
+  padding: 12px;
+  background: linear-gradient(135deg, #27ae60, #1a1a1a);
+  border: 2px solid #27ae60;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.hminus-blocker-chain-btn:hover {
+  background: linear-gradient(135deg, #219a52, #0f0f0f);
+  border-color: #219a52;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(33, 154, 82, 0.4);
+}
+
+/* Form kaydet butonu - Kırmızı-Siyah */
+.hminus-save-btn {
+  background: linear-gradient(135deg, #e74c3c, #1a1a1a);
+  border: 2px solid #e74c3c;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.hminus-save-btn:hover {
+  background: linear-gradient(135deg, #c0392b, #0f0f0f);
+  border-color: #c0392b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(192, 57, 43, 0.4);
+}
+
+/* Update butonu - Yeşil-Siyah */
+.hminus-update-btn {
+  background: linear-gradient(135deg, #27ae60, #1a1a1a);
+  border: 2px solid #27ae60;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.hminus-update-btn:hover {
+  background: linear-gradient(135deg, #219a52, #0f0f0f);
+  border-color: #219a52;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(33, 154, 82, 0.4);
+}
+
+/* Save blocker butonu - Kırmızı-Siyah */
+.hminus-save-blocker-btn {
+  background: linear-gradient(135deg, #e74c3c, #1a1a1a);
+  border: 2px solid #e74c3c;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.hminus-save-blocker-btn:hover {
+  background: linear-gradient(135deg, #c0392b, #0f0f0f);
+  border-color: #c0392b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(192, 57, 43, 0.4);
 }
 

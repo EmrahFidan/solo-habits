@@ -12,12 +12,16 @@ const Main = lazy(() => import("./components/Main"));
 const Tatakae = lazy(() => import("./components/Tatakae"));
 const HMinus = lazy(() => import("./components/HMinus"));
 const Settings = lazy(() => import("./components/Settings"));
+const Itera = lazy(() => import("./components/Itera"));
+const Guide = lazy(() => import("./components/Guide"));
 
 function App() {
   const [activeTab, setActiveTab] = useState(0);
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showGuide, setShowGuide] = useState(false);
+  const [showInitialGuide, setShowInitialGuide] = useState(false);
 
   useEffect(() => {
     console.log("🔥 Firebase Auth başlatılıyor...");
@@ -32,7 +36,14 @@ function App() {
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
           console.log("📄 User data yüklendi");
-          setUserData(userDoc.data());
+          const userData = userDoc.data();
+          setUserData(userData);
+          
+          // İlk giriş kontrolü - kılavuz göster
+          if (userData.isFirstLogin) {
+            console.log("🎯 İlk giriş tespit edildi, kılavuz gösteriliyor");
+            setShowInitialGuide(true);
+          }
           } else {
             console.log("❌ User document bulunamadı");
           }
@@ -56,14 +67,52 @@ function App() {
   const handleLogout = () => signOut(auth);
 
   const tabs = [
-    { id: 0, name: "MAIN", icon: "🌟" },
-    { id: 1, name: "TATAKAE", icon: "⚡" },
-    { id: 2, name: "H-", icon: "🚫" },
-    { id: 3, name: "SETTINGS", icon: "⚙️" },
+    { id: 0, name: "MAIN", icon: "🛖" },
+    { id: 1, name: "ITERA", icon: "🔄" },
+    { id: 2, name: "TATAKAE", icon: "⚔️" },
+    { id: 3, name: "H-", icon: "🚫" },
   ];
 
   const handleTabSwitch = (tabId) => {
     setActiveTab(tabId);
+  };
+
+  const handleGuideComplete = async () => {
+    console.log("🎉 Kılavuz tamamlandı!");
+    setShowInitialGuide(false);
+    
+    // İlk giriş bayrağını kaldır
+    if (user && userData?.isFirstLogin) {
+      try {
+        const { setDoc } = await import('firebase/firestore');
+        await setDoc(doc(db, 'users', user.uid), {
+          ...userData,
+          isFirstLogin: false
+        }, { merge: true });
+        setUserData({
+          ...userData,
+          isFirstLogin: false
+        });
+        console.log("✅ İlk giriş bayrağı kaldırıldı");
+      } catch (error) {
+        console.error("🚨 Firestore güncellemesi başarısız:", error);
+      }
+    }
+  };
+
+  const handleGuideSkip = async () => {
+    console.log("⏭️ Kılavuz atlandı");
+    await handleGuideComplete(); // Aynı işlemi yapar
+  };
+
+  const openGuide = () => {
+    console.log("📚 Kılavuz manuel olarak açıldı");
+    setShowGuide(true);
+  };
+
+  const closeGuide = () => {
+    console.log("❌ Kılavuz kapatıldı");
+    setShowGuide(false);
   };
 
   if (loading) return <SkeletonLoader />;
@@ -80,6 +129,26 @@ function App() {
 
   return (
     <ErrorBoundary userId={user?.uid}>
+      {/* İlk giriş kılavuzu */}
+      {showInitialGuide && (
+        <Suspense fallback={<SkeletonLoader />}>
+          <Guide 
+            onComplete={handleGuideComplete}
+            onSkip={handleGuideSkip}
+          />
+        </Suspense>
+      )}
+
+      {/* Manuel kılavuz */}
+      {showGuide && (
+        <Suspense fallback={<SkeletonLoader />}>
+          <Guide 
+            onComplete={closeGuide}
+            onSkip={closeGuide}
+          />
+        </Suspense>
+      )}
+
       <div className="app">
         <div className="tab-navigation">
           {tabs.map((tab) => (
@@ -98,13 +167,21 @@ function App() {
           <ErrorBoundary userId={user?.uid}>
             <Suspense fallback={<SkeletonLoader />}>
               {activeTab === 0 && (
-                <Main user={user} userData={userData} setActiveTab={setActiveTab} />
+                <Main 
+                  user={user} 
+                  userData={userData} 
+                  setActiveTab={setActiveTab}
+                  openGuide={openGuide}
+                />
               )}
-              {activeTab === 1 && <Tatakae />}
-              {activeTab === 2 && <HMinus />}
-              {activeTab === 3 && (
+              {activeTab === 1 && <Itera />}
+              {activeTab === 2 && <Tatakae />}
+              {activeTab === 3 && <HMinus />}
+              {activeTab === 4 && (
                 <Settings 
                   onLogout={handleLogout}
+                  setActiveTab={setActiveTab}
+                  openGuide={openGuide}
                 />
               )}
             </Suspense>

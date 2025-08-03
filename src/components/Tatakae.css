@@ -39,6 +39,133 @@
   flex-wrap: wrap;
 }
 
+/* TATAKAE ÖZEL BUTON STİLLERİ */
+.tatakae-add-challenge-btn {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px;
+  background: linear-gradient(135deg, #3498db, #1a1a1a);
+  border: 2px solid #3498db;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.tatakae-add-challenge-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #0f0f0f);
+  border-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(41, 128, 185, 0.4);
+}
+
+.tatakae-stack-chain-btn {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px;
+  background: linear-gradient(135deg, #2d5016, #1a1a1a);
+  border: 2px solid #2d5016;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.tatakae-stack-chain-btn:hover {
+  background: linear-gradient(135deg, #1e3a0f, #0f0f0f);
+  border-color: #1e3a0f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 58, 15, 0.4);
+}
+
+.tatakae-save-btn {
+  background: linear-gradient(135deg, #3498db, #1a1a1a);
+  border: 2px solid #3498db;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.tatakae-save-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #0f0f0f);
+  border-color: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(41, 128, 185, 0.4);
+}
+
+.tatakae-update-btn {
+  background: linear-gradient(135deg, #2d5016, #1a1a1a);
+  border: 2px solid #2d5016;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.tatakae-update-btn:hover {
+  background: linear-gradient(135deg, #1e3a0f, #0f0f0f);
+  border-color: #1e3a0f;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(30, 58, 15, 0.4);
+}
+
+.tatakae-save-stack-btn {
+  background: linear-gradient(135deg, #3498db, #1a1a1a);
+  border: 2px solid #3498db;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.tatakae-save-stack-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #0f0f0f);
+  border-color: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(41, 128, 185, 0.4);
+}
+
+.tatakae-achievement-close-btn {
+  background: linear-gradient(135deg, #2d5016, #1a1a1a);
+  border: 2px solid #2d5016;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.tatakae-achievement-close-btn:hover {
+  background: linear-gradient(135deg, #1e3a0f, #0f0f0f);
+  border-color: #1e3a0f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30, 58, 15, 0.4);
+}
+
 .add-challenge-btn {
   flex: 1;
   min-width: 200px;
@@ -631,40 +758,46 @@
 }
 
 .day-box {
-  aspect-ratio: 1;
-  background: rgba(50, 50, 50, 0.6);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border: 2px solid transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-height: 42px;
-  position: relative;
+  aspect-ratio: 1 !important;
+  background: rgba(100, 100, 100, 0.95) !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.3s !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  min-height: 42px !important;
+  position: relative !important;
 }
 
 .day-box:hover {
-  background: rgba(70, 70, 70, 0.8);
-  transform: translateY(-2px);
+  background: rgba(120, 120, 120, 1) !important;
+  transform: translateY(-2px) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-.day-box.current {
-  background: rgba(255, 107, 107, 0.2);
-  border-color: #ff6b6b;
-  animation: pulse 2s infinite;
+.tatakae-container .day-box.current {
+  background: rgba(52, 152, 219, 0.3) !important;
+  border-color: #3498db !important;
+  animation: pulse 2s infinite !important;
 }
 
-.day-box.completed {
-  background: rgba(67, 233, 123, 0.2);
-  border-color: #43e97b;
+/* Tatakae specific completed styles - Page specific */
+.tatakae-container .monthly-progress .day-box.completed {
+  background: rgba(52, 152, 219, 0.3) !important;
+  border-color: #3498db !important;
+  color: #3498db !important;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.2) !important;
 }
 
-.day-box.current.completed {
-  background: rgba(67, 233, 123, 0.3);
-  border-color: #43e97b;
+.tatakae-container .monthly-progress .day-box.current.completed {
+  background: rgba(52, 152, 219, 0.4) !important;
+  border-color: #3498db !important;
+  color: #3498db !important;
+  box-shadow: 0 0 15px rgba(52, 152, 219, 0.3) !important;
 }
 
 .day-box.past {

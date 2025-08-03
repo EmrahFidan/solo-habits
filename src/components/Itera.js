@@ -12,17 +12,19 @@ import {
 } from "firebase/firestore";
 import "./Tatakae.css";
 import "./SettingsStyles.css";
+import "./Itera.css";
 
-function Tatakae({ soundEnabled }) {
+function Itera({ soundEnabled }) {
   const [challenges, setChallenges] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [newChallenge, setNewChallenge] = useState({
     name: "",
     icon: "🎯",
-    color: "#667eea",
+    color: "#ec911aff",
     description: "",
-    duration: 30,
+    duration: 7,
     bundlePartner: "", // Temptation Bundling için
+    selectedDays: [], // Haftanın hangi günleri seçildiği
   });
   const [showConfirm, setShowConfirm] = useState(null);
   const [showDescription, setShowDescription] = useState(null);
@@ -85,10 +87,10 @@ function Tatakae({ soundEnabled }) {
     "#fcb69f",
   ];
 
-  useEffect(() => {
+    useEffect(() => {
     if (!auth.currentUser) return;
     const q = query(
-      collection(db, "tatakae"),
+      collection(db, "itera"),
       where("userId", "==", auth.currentUser.uid)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -110,7 +112,7 @@ function Tatakae({ soundEnabled }) {
       setChallenges(active);
     });
     return unsubscribe;
-  }, []);
+  }, [auth.currentUser]);
 
   const createConfetti = useCallback(() => {
     const newConfetti = [];
@@ -193,59 +195,7 @@ function Tatakae({ soundEnabled }) {
     }, 2000);
   }, []);
 
-  const applyPenalty = useCallback(
-    async (challenge, missedDayIndex) => {
-      const newMissedDays = (challenge.missedDays || 0) + 1;
-      const consecutiveMissed = challenge.consecutiveMissed || 0;
-      const newConsecutiveMissed = consecutiveMissed + 1;
-      const recoveryMode = newConsecutiveMissed >= 2;
-
-      await updateDoc(doc(db, "tatakae", challenge.id), {
-        missedDays: newMissedDays,
-        consecutiveMissed: newConsecutiveMissed,
-        recoveryMode: recoveryMode,
-        lastPenaltyApplied: new Date().toISOString(),
-      });
-
-      if (recoveryMode) {
-        console.log(
-          `🔄 Recovery Mode: ${challenge.name} için ertesi gün bonus şans!`
-        );
-      }
-    },
-    []
-  );
-
-  const checkDailyPenalties = useCallback(async () => {
-    const today = new Date().toDateString();
-    const lastPenaltyCheck = localStorage.getItem("lastPenaltyCheck");
-
-    if (lastPenaltyCheck === today) return;
-
-    for (const challenge of challenges) {
-      const duration = challenge.duration || 30;
-      if (getDaysSinceStart(challenge.startDate) >= duration) continue;
-
-      const yesterdayIndex = getDaysSinceStart(challenge.startDate) - 1;
-      if (yesterdayIndex < 0) continue;
-
-      const progress = challenge.monthlyProgress || Array(duration).fill(false);
-      const wasYesterdayCompleted = progress[yesterdayIndex];
-
-      if (!wasYesterdayCompleted && yesterdayIndex >= 0) {
-        await applyPenalty(challenge, yesterdayIndex);
-      }
-    }
-
-    localStorage.setItem("lastPenaltyCheck", today);
-  }, [challenges, applyPenalty]);
-
-  useEffect(() => {
-    if (!auth.currentUser) return;
-    checkDailyPenalties();
-    const interval = setInterval(checkDailyPenalties, 60000 * 60);
-    return () => clearInterval(interval);
-  }, [checkDailyPenalties]);
+  
 
   const getDaysSinceStart = (startDate) => {
     if (!startDate) return 0;
@@ -269,67 +219,90 @@ function Tatakae({ soundEnabled }) {
     const progress = challenge.monthlyProgress || Array(duration).fill(false);
 
     const startDate = new Date(challenge.startDate + "T00:00:00");
-    const dayNames = ["Pz", "Pt", "Sa", "Ça", "Pe", "Cu", "Ct"];
+    const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+    const selectedDays = challenge.selectedDays || [0, 1, 2, 3, 4, 5, 6]; // Tüm günler default
 
-    return Array.from({ length: duration }, (_, index) => {
+    const boxes = [];
+    for (let index = 0; index < duration; index++) {
       const dayNumber = index + 1;
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + index);
-
+      const dayOfWeek = currentDate.getDay();
+      
+      // Sadece seçili günleri göster
+      if (!selectedDays.includes(dayOfWeek)) {
+        continue; // Bu günü atla
+      }
+      
       const isCompleted = progress[index];
       const isCurrent = dayNumber === currentDay && daysSinceStart < duration;
       const isPast = dayNumber < currentDay;
       const isFuture = dayNumber > currentDay;
       const isMissed = isPast && !isCompleted;
-
-      return {
+      
+      boxes.push({
         dayNumber,
-        date: currentDate.getDate(),
-        dayName: dayNames[currentDate.getDay()],
+        date: `${dayNames[dayOfWeek]} ${currentDate.getDate()}`, // Gün kısaltması + tarih
+        dayName: dayNames[dayOfWeek],
         isCompleted,
         isCurrent,
         isPast,
         isFuture,
         isMissed,
         canToggle: isCurrent && !isPast,
-      };
-    });
+      });
+    }
+    
+    return boxes;
   };
 
   const addChallenge = async () => {
     if (!newChallenge.name.trim()) return;
+    
+    if (!auth.currentUser) {
+      alert("Lütfen önce giriş yapın!");
+      return;
+    }
 
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    const startDate = `${year}-${month}-${day}`;
+    try {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const startDate = `${year}-${month}-${day}`;
 
-    const duration = newChallenge.duration;
-
-    await addDoc(collection(db, "tatakae"), {
-      ...newChallenge,
-      startDate: startDate,
-      duration: duration,
-      userId: auth.currentUser.uid,
-      monthlyProgress: Array(duration).fill(false),
-      completedDays: 0,
-      missedDays: 0,
-      consecutiveMissed: 0,
-      recoveryMode: false,
-      createdAt: new Date(),
-    });
+      const duration = newChallenge.duration;
+      
+      await addDoc(collection(db, "itera"), {
+        ...newChallenge,
+        startDate: startDate,
+        duration: duration,
+        userId: auth.currentUser.uid,
+        monthlyProgress: Array(duration).fill(false),
+        completedDays: 0,
+        missedDays: 0,
+        consecutiveMissed: 0,
+        recoveryMode: false,
+        createdAt: new Date(),
+      });
+    } catch (error) {
+      console.error("Challenge ekleme hatası:", error);
+      alert("Challenge eklenirken bir hata oluştu: " + error.message);
+      return;
+    }
 
     setNewChallenge({
       name: "",
       icon: "🎯",
       color: "#667eea",
       description: "",
-      duration: 30,
+      duration: 7,
       bundlePartner: "", // Bundle partner'ı da temizle
+      selectedDays: [], // Seçilen günleri de temizle
     });
     setShowForm(false);
   };
+
 
 
   const toggleDay = async (challenge, dayIndex) => {
@@ -353,7 +326,7 @@ function Tatakae({ soundEnabled }) {
       : challenge.consecutiveMissed || 0;
     const newRecoveryMode = newConsecutiveMissed >= 2;
 
-    await updateDoc(doc(db, "tatakae", challenge.id), {
+    await updateDoc(doc(db, "itera", challenge.id), {
       monthlyProgress: newProgress,
       completedDays: completedDays,
       consecutiveMissed: newConsecutiveMissed,
@@ -361,11 +334,11 @@ function Tatakae({ soundEnabled }) {
       lastUpdated: new Date(),
     });
 
-    
+
     // 30 günlük challenge tamamlandıysa aylık rozet ekle
     if (duration === 30 && daysSinceStart >= 29 && newPercentage === 100) {
       const newMonthsCompleted = (challenge.monthsCompleted || 0) + 1;
-      await updateDoc(doc(db, "tatakae", challenge.id), {
+      await updateDoc(doc(db, "itera", challenge.id), {
         monthsCompleted: newMonthsCompleted,
       });
     }
@@ -417,12 +390,12 @@ function Tatakae({ soundEnabled }) {
   };
 
   const deleteChallenge = async (id) => {
-    await deleteDoc(doc(db, "tatakae", id));
+    await deleteDoc(doc(db, "itera", id));
     setShowConfirm(null);
   };
 
   const updateDescription = async (challengeId) => {
-    await updateDoc(doc(db, "tatakae", challengeId), {
+    await updateDoc(doc(db, "itera", challengeId), {
       description: updatedDescription,
     });
     setShowDescription(null);
@@ -430,14 +403,16 @@ function Tatakae({ soundEnabled }) {
   };
 
   const updateStackTriggers = async () => {
-    const updatePromises = Object.entries(stackTriggers).map(([challengeId, trigger]) => {
-      if (trigger.trim()) {
-        return updateDoc(doc(db, "tatakae", challengeId), {
-          stackTrigger: trigger.trim(),
-        });
-      }
-      return null;
-    }).filter(Boolean);
+    const updatePromises = Object.entries(stackTriggers)
+      .map(([challengeId, trigger]) => {
+        if (trigger.trim()) {
+          return updateDoc(doc(db, "itera", challengeId), {
+            stackTrigger: trigger.trim(),
+          });
+        }
+        return null;
+      })
+      .filter(Boolean);
 
     await Promise.all(updatePromises);
     setShowStackModal(false);
@@ -446,7 +421,7 @@ function Tatakae({ soundEnabled }) {
 
   const openStackModal = () => {
     const triggers = {};
-    challenges.forEach(challenge => {
+    challenges.forEach((challenge) => {
       triggers[challenge.id] = challenge.stackTrigger || "";
     });
     setStackTriggers(triggers);
@@ -488,14 +463,14 @@ function Tatakae({ soundEnabled }) {
   };
 
   const getDiamondClass = (monthsCompleted) => {
-    if (monthsCompleted >= 6) return 'diamond-legendary'; // 6+ Altın
-    if (monthsCompleted >= 4) return 'diamond-master';    // 4-5 Kırmızı
-    if (monthsCompleted >= 2) return 'diamond-advanced';  // 2-3 Mor
-    return 'diamond-basic';                               // 1 Mavi
+    if (monthsCompleted >= 6) return "diamond-legendary"; // 6+ Altın
+    if (monthsCompleted >= 4) return "diamond-master"; // 4-5 Kırmızı
+    if (monthsCompleted >= 2) return "diamond-advanced"; // 2-3 Mor
+    return "diamond-basic"; // 1 Mavi
   };
 
   return (
-    <div className={`tatakae-container ${screenShake ? "screen-shake" : ""}`}>
+    <div className={`itera-container ${screenShake ? "screen-shake" : ""}`}>
       {confetti.length > 0 && (
         <div className="confetti-container">
           {confetti.map((piece) => (
@@ -570,7 +545,7 @@ function Tatakae({ soundEnabled }) {
               </div>
             </div>
             <button
-              className="tatakae-achievement-close-btn"
+              className="itera-achievement-close-btn"
               onClick={() => setAchievementModal(null)}
             >
               Devam Et 🎉
@@ -580,22 +555,33 @@ function Tatakae({ soundEnabled }) {
       )}
 
       <div className="tatakae-header">
-        <h1 style={{color: '#00d084', background: 'none', WebkitTextFillColor: '#00d084'}}>⚔️ TATAKAE </h1>
-        <p>Hayatında yeni bir şey dene ve deneyimle!</p>
+        <h1 style={{color: '#ff9500', background: 'none', WebkitTextFillColor: '#ff9500'}}>🔄 ITERA</h1>
+        <p>İtera: Tekrarla, Geliştir, Başar - Sürekli İyileştirme Döngüsü</p>
       </div>
 
-      <div className="tatakae-buttons">
-        <button className="tatakae-add-challenge-btn" onClick={() => setShowForm(true)}>
+      <div className="itera-buttons">
+        <button
+          className="itera-add-challenge-btn"
+          onClick={() => setShowForm(true)}
+        >
           <span>+</span> Yeni Challenge Başlat
         </button>
-        <button className="tatakae-stack-chain-btn" onClick={openStackModal}>
+        <button
+          className="itera-stack-chain-btn"
+          onClick={openStackModal}
+        >
           <span>⛓️</span> Alışkanlık Zinciri Kur
         </button>
       </div>
 
       {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="challenge-form" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            console.log("Modal overlay boş alanına tıklandı");
+            setShowForm(false);
+          }
+        }}>
+          <div className="challenge-form">
             <h3>Challenge Oluştur</h3>
             <p className="modal-section-description">
               Challenge bugün başlayacak!
@@ -609,13 +595,16 @@ function Tatakae({ soundEnabled }) {
                 setNewChallenge({ ...newChallenge, name: e.target.value })
               }
             />
-            <p style={{
-              fontSize: '12px', 
-              color: 'rgba(67, 233, 123, 0.8)', 
-              marginTop: '8px',
-              fontWeight: '500'
-            }}>
-              ⚡ İpucun: En basit 2 dakikalık versiyonla başla! (ör: "1 sayfa oku", "5 şınav çek", "1 dakika nefes al")
+            <p
+              style={{
+                fontSize: "12px",
+                color: "rgba(67, 233, 123, 0.8)",
+                marginTop: "8px",
+                fontWeight: "500",
+              }}
+            >
+              ⚡ İpucun: En basit 2 dakikalık versiyonla başla! (ör: "1 sayfa
+              oku", "5 şınav çek", "1 dakika nefes al")
             </p>
 
             <div className="icon-selector">
@@ -651,6 +640,35 @@ function Tatakae({ soundEnabled }) {
               </div>
             </div>
 
+            <div className="day-selector">
+              <p>Haftanın hangi günleri?</p>
+              <div className="day-grid">
+                {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map((day, index) => {
+                  const dayValue = [1, 2, 3, 4, 5, 6, 0][index];
+                  return (
+                    <button
+                      key={day}
+                      className={`day-option ${
+                        newChallenge.selectedDays.includes(dayValue) ? "selected" : ""
+                      }`}
+                      onClick={() => {
+                        const selectedDays = [...newChallenge.selectedDays];
+                        if (selectedDays.includes(dayValue)) {
+                          const dayIndex = selectedDays.indexOf(dayValue);
+                          selectedDays.splice(dayIndex, 1);
+                        } else {
+                          selectedDays.push(dayValue);
+                        }
+                        setNewChallenge({ ...newChallenge, selectedDays });
+                      }}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
 
             <div className="description-selector">
               <p>Bu challenge'ı neden yapmak istiyorsun?</p>
@@ -668,7 +686,10 @@ function Tatakae({ soundEnabled }) {
             </div>
 
             <div className="bundle-selector">
-              <p>🎁 Temptation Bundling - Sevdiğin şeyi sadece bu challenge ile birleştir!</p>
+              <p>
+                🎁 Temptation Bundling - Sevdiğin şeyi sadece bu challenge ile
+                birleştir!
+              </p>
               <input
                 type="text"
                 placeholder="Sevdiğin şeyi yaz... (ör: Netflix izlemek, Müzik dinlemek, Atlıstırmalık yemek)"
@@ -680,14 +701,21 @@ function Tatakae({ soundEnabled }) {
                   })
                 }
               />
-              <p style={{ fontSize: '12px', color: 'rgba(204, 201, 220, 0.6)', marginTop: '8px' }}>
-                Örnek: "Podcast dinlerken sadece koşuyorum" veya "Sevdiğim müziği sadece çalışırken dinliyorum"
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "rgba(204, 201, 220, 0.6)",
+                  marginTop: "8px",
+                }}
+              >
+                Örnek: "Podcast dinlerken sadece koşuyorum" veya "Sevdiğim
+                müziği sadece çalışırken dinliyorum"
               </p>
             </div>
 
             <div className="form-buttons">
               <button onClick={() => setShowForm(false)}>İptal</button>
-              <button onClick={addChallenge} className="tatakae-save-btn">
+              <button onClick={addChallenge} className="itera-save-btn">
                 Challenge Başlat
               </button>
             </div>
@@ -738,13 +766,6 @@ function Tatakae({ soundEnabled }) {
                 >
                   💬
                 </button>
-                {challenge.missedDays > 0 && (
-                  <div className="penalty-stats">
-                    <span className="missed-days">
-                      😢 {challenge.missedDays}
-                    </span>
-                  </div>
-                )}
                 <div className="progress-container">
                   <div
                     className={getProgressClass(
@@ -764,10 +785,10 @@ function Tatakae({ soundEnabled }) {
                         {getCompletionPercentage(challenge) >= 95
                           ? "🏆"
                           : getCompletionPercentage(challenge) >= 75
-                          ? "🔥"
-                          : getCompletionPercentage(challenge) >= 50
-                          ? "⭐"
-                          : "🌟"}
+                            ? "🔥"
+                            : getCompletionPercentage(challenge) >= 50
+                              ? "⭐"
+                              : "🌟"}
                       </div>
                     )}
                   </div>
@@ -775,7 +796,9 @@ function Tatakae({ soundEnabled }) {
                 <div className="completed-count">
                   {challenge.completedDays || 0}/{challenge.duration || 30}
                   {challenge.monthsCompleted > 0 && (
-                    <span className={`months-completed ${getDiamondClass(challenge.monthsCompleted)}`}>
+                    <span
+                      className={`months-completed ${getDiamondClass(challenge.monthsCompleted)}`}
+                    >
                       💎{challenge.monthsCompleted}
                     </span>
                   )}
@@ -783,23 +806,17 @@ function Tatakae({ soundEnabled }) {
               </div>
             </div>
 
-            {challenge.recoveryMode && (
-              <div className="recovery-notification">
-                🔄 <strong>Recovery Mode:</strong> Bugün tamamlarsan ekstra motivasyon kazanırsın!
-              </div>
-            )}
-
             <div className="monthly-progress">
-              {getProgressBoxes(challenge).map((box, index) => (
+              {getProgressBoxes(challenge).filter(box => box !== null).map((box) => (
                 <div
-                  key={`${challenge.id}-day-${box.dayNumber}-${index}`}
+                  key={`${challenge.id}-day-${box.dayNumber}-${box.originalIndex}`}
                   className={`day-box ${box.isCompleted ? "completed" : ""} ${
                     box.isCurrent ? "current" : ""
                   } ${box.isFuture ? "future" : ""} ${
                     box.isPast ? "past" : ""
                   } ${box.isMissed ? "missed" : ""}`}
-                  onClick={() =>
-                    box.canToggle && toggleDay(challenge, index)
+                  onDoubleClick={() =>
+                    box.canToggle && toggleDay(challenge, box.dayNumber - 1)
                   }
                   style={{ cursor: box.canToggle ? "pointer" : "default" }}
                 >
@@ -877,7 +894,7 @@ function Tatakae({ soundEnabled }) {
             <div className="description-actions">
               <button onClick={() => setShowDescription(null)}>İptal</button>
               <button
-                className="tatakae-update-btn"
+                className="itera-update-btn"
                 onClick={() => updateDescription(showDescription.id)}
               >
                 Güncelle
@@ -891,43 +908,49 @@ function Tatakae({ soundEnabled }) {
         <div className="modal-overlay" onClick={() => setShowStackModal(false)}>
           <div className="stack-modal" onClick={(e) => e.stopPropagation()}>
             <h3>⛓️ Alışkanlık Zinciri Kur</h3>
-            <p style={{
-              textAlign: "center",
-              color: "rgba(204, 201, 220, 0.7)",
-              fontSize: "14px",
-              marginBottom: "20px"
-            }}>
+            <p
+              style={{
+                textAlign: "center",
+                color: "rgba(204, 201, 220, 0.7)",
+                fontSize: "14px",
+                marginBottom: "20px",
+              }}
+            >
               Mevcut alışkanlıklarınızı bir tetikleyiciye bağlayın!
             </p>
 
             <div className="stack-challenges-list">
-              {challenges.filter(c => !isExpired(c)).map((challenge) => (
-                <div key={challenge.id} className="stack-challenge-item">
-                  <div className="stack-challenge-info">
-                    <span className="challenge-icon">{challenge.icon}</span>
-                    <span className="challenge-name">{challenge.name}</span>
+              {challenges
+                .filter((c) => !isExpired(c))
+                .map((challenge) => (
+                  <div key={challenge.id} className="stack-challenge-item">
+                    <div className="stack-challenge-info">
+                      <span className="challenge-icon">{challenge.icon}</span>
+                      <span className="challenge-name">{challenge.name}</span>
+                    </div>
+                    <div className="stack-trigger-input">
+                      <input
+                        type="text"
+                        placeholder="Tetikleyici... (ör: Kahve içtikten sonra, Dişlerimi fırçaladıktan sonra)"
+                        value={stackTriggers[challenge.id] || ""}
+                        onChange={(e) =>
+                          setStackTriggers({
+                            ...stackTriggers,
+                            [challenge.id]: e.target.value,
+                          })
+                        }
+                      />
+                      {stackTriggers[challenge.id] && (
+                        <div className="stack-preview">
+                          "{stackTriggers[challenge.id]} → {challenge.name}"
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="stack-trigger-input">
-                    <input
-                      type="text"
-                      placeholder="Tetikleyici... (ör: Kahve içtikten sonra, Dişlerimi fırçaladıktan sonra)"
-                      value={stackTriggers[challenge.id] || ""}
-                      onChange={(e) => setStackTriggers({
-                        ...stackTriggers,
-                        [challenge.id]: e.target.value
-                      })}
-                    />
-                    {stackTriggers[challenge.id] && (
-                      <div className="stack-preview">
-                        "{stackTriggers[challenge.id]} → {challenge.name}"
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
 
-            {challenges.filter(c => !isExpired(c)).length === 0 && (
+            {challenges.filter((c) => !isExpired(c)).length === 0 && (
               <div className="empty-stack-state">
                 <p>Aktif challenge'ınız bulunmuyor.</p>
                 <p>Önce bir challenge başlatın!</p>
@@ -936,10 +959,12 @@ function Tatakae({ soundEnabled }) {
 
             <div className="stack-buttons">
               <button onClick={() => setShowStackModal(false)}>İptal</button>
-              <button 
-                onClick={updateStackTriggers} 
-                className="tatakae-save-stack-btn"
-                disabled={Object.values(stackTriggers).every(trigger => !trigger?.trim())}
+              <button
+                onClick={updateStackTriggers}
+                className="itera-save-stack-btn"
+                disabled={Object.values(stackTriggers).every(
+                  (trigger) => !trigger?.trim()
+                )}
               >
                 Zincirleri Kaydet
               </button>
@@ -947,9 +972,9 @@ function Tatakae({ soundEnabled }) {
           </div>
         </div>
       )}
-      
+
     </div>
   );
 }
 
-export default Tatakae;
+export default Itera;
