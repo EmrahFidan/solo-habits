@@ -1,27 +1,21 @@
-import React, { useState, useEffect, Suspense, lazy } from "react";
-import SkeletonLoader from "./components/SkeletonLoader";
+import React, { useState, useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 import { auth, db } from "./firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-
-// Lazy load components for better performance
-const Auth = lazy(() => import("./components/Auth"));
-const Main = lazy(() => import("./components/Main"));
-const Tatakae = lazy(() => import("./components/Tatakae"));
-const HMinus = lazy(() => import("./components/HMinus"));
-const Settings = lazy(() => import("./components/Settings"));
-const Itera = lazy(() => import("./components/Itera"));
-const Guide = lazy(() => import("./components/Guide"));
+import Auth from "./components/Auth";
+import Tatakae from "./components/Tatakae";
+import HMinus from "./components/HMinus";
+import Itera from "./components/Itera";
 
 function App() {
   const [activeTab, setActiveTab] = useState(0);
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [showGuide, setShowGuide] = useState(false);
-  const [showInitialGuide, setShowInitialGuide] = useState(false);
+  const [loading, setLoading] = useState(false); // no loading animation, show immediately
+  const [developerMode, setDeveloperMode] = useState(false);
+  const [headerClickCount, setHeaderClickCount] = useState(0);
 
   useEffect(() => {
     console.log("🔥 Firebase Auth başlatılıyor...");
@@ -38,12 +32,6 @@ function App() {
           console.log("📄 User data yüklendi");
           const userData = userDoc.data();
           setUserData(userData);
-          
-          // İlk giriş kontrolü - kılavuz göster
-          if (userData.isFirstLogin) {
-            console.log("🎯 İlk giriş tespit edildi, kılavuz gösteriliyor");
-            setShowInitialGuide(true);
-          }
           } else {
             console.log("❌ User document bulunamadı");
           }
@@ -55,101 +43,51 @@ function App() {
       setUserData(null);
       }
       
-      console.log("⏰ Loading false yapılıyor...");
       setLoading(false);
     });
     
     return unsubscribe;
   }, []);
 
-  // ...existing code...
-
-  const handleLogout = () => signOut(auth);
-
   const tabs = [
-    { id: 0, name: "MAIN", icon: "🛖" },
-    { id: 1, name: "ITERA", icon: "🔄" },
-    { id: 2, name: "TATAKAE", icon: "⚔️" },
-    { id: 3, name: "H-", icon: "🚫" },
+    { id: 0, name: "ITERA", icon: "🔄" },
+    { id: 1, name: "TATAKAE", icon: "⚔️" },
+    { id: 2, name: "H-", icon: "🚫" },
   ];
 
   const handleTabSwitch = (tabId) => {
     setActiveTab(tabId);
   };
 
-  const handleGuideComplete = async () => {
-    console.log("🎉 Kılavuz tamamlandı!");
-    setShowInitialGuide(false);
-    
-    // İlk giriş bayrağını kaldır
-    if (user && userData?.isFirstLogin) {
-      try {
-        const { setDoc } = await import('firebase/firestore');
-        await setDoc(doc(db, 'users', user.uid), {
-          ...userData,
-          isFirstLogin: false
-        }, { merge: true });
-        setUserData({
-          ...userData,
-          isFirstLogin: false
-        });
-        console.log("✅ İlk giriş bayrağı kaldırıldı");
-      } catch (error) {
-        console.error("🚨 Firestore güncellemesi başarısız:", error);
-      }
+  const handleHeaderClick = () => {
+    const next = headerClickCount + 1;
+    if (next >= 5) {
+      setDeveloperMode((prev) => !prev);
+      setHeaderClickCount(0);
+      console.log(`👨‍💻 Developer Mode ${!developerMode ? "AKTIF" : "KAPALI"}`);
+    } else {
+      setHeaderClickCount(next);
     }
   };
 
-  const handleGuideSkip = async () => {
-    console.log("⏭️ Kılavuz atlandı");
-    await handleGuideComplete(); // Aynı işlemi yapar
-  };
-
-  const openGuide = () => {
-    console.log("📚 Kılavuz manuel olarak açıldı");
-    setShowGuide(true);
-  };
-
-  const closeGuide = () => {
-    console.log("❌ Kılavuz kapatıldı");
-    setShowGuide(false);
-  };
-
-  if (loading) return <SkeletonLoader />;
+  // No loading animation; render immediately
 
   if (!user) {
     return (
       <ErrorBoundary>
-        <Suspense fallback={<SkeletonLoader />}>
-          <Auth />
-        </Suspense>
+        <Auth />
       </ErrorBoundary>
     );
   }
 
   return (
     <ErrorBoundary userId={user?.uid}>
-      {/* İlk giriş kılavuzu */}
-      {showInitialGuide && (
-        <Suspense fallback={<SkeletonLoader />}>
-          <Guide 
-            onComplete={handleGuideComplete}
-            onSkip={handleGuideSkip}
-          />
-        </Suspense>
-      )}
-
-      {/* Manuel kılavuz */}
-      {showGuide && (
-        <Suspense fallback={<SkeletonLoader />}>
-          <Guide 
-            onComplete={closeGuide}
-            onSkip={closeGuide}
-          />
-        </Suspense>
-      )}
-
       <div className="app">
+        {developerMode && (
+          <div className="dev-badge" title="Developer Mode aktif">
+            👨‍💻 DEV MODE
+          </div>
+        )}
         <div className="tab-navigation">
           {tabs.map((tab) => (
             <button
@@ -165,26 +103,15 @@ function App() {
 
         <div className="content">
           <ErrorBoundary userId={user?.uid}>
-            <Suspense fallback={<SkeletonLoader />}>
-              {activeTab === 0 && (
-                <Main 
-                  user={user} 
-                  userData={userData} 
-                  setActiveTab={setActiveTab}
-                  openGuide={openGuide}
-                />
-              )}
-              {activeTab === 1 && <Itera />}
-              {activeTab === 2 && <Tatakae />}
-              {activeTab === 3 && <HMinus />}
-              {activeTab === 4 && (
-                <Settings 
-                  onLogout={handleLogout}
-                  setActiveTab={setActiveTab}
-                  openGuide={openGuide}
-                />
-              )}
-            </Suspense>
+            {activeTab === 0 && (
+              <Itera developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+            )}
+            {activeTab === 1 && (
+              <Tatakae developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+            )}
+            {activeTab === 2 && (
+              <HMinus developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+            )}
           </ErrorBoundary>
         </div>
       </div>

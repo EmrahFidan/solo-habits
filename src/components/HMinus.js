@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import "./HMinus.css";
 
-function HMinus({ soundEnabled }) {
+function HMinus({ soundEnabled, developerMode = false, onHeaderClick }) {
   const [badHabits, setBadHabits] = useState([]);
   const [showForm, setShowForm] = useState(false);
 
@@ -162,10 +162,10 @@ function HMinus({ soundEnabled }) {
         isCurrent,
         isPast,
         isFuture,
-        canToggle: isCurrent,
+        canToggle: developerMode || isCurrent,
       };
     });
-  }, []);
+  }, [developerMode]);
 
   const addBadHabit = async () => {
     if (!newBadHabit.name.trim()) return;
@@ -209,8 +209,10 @@ function HMinus({ soundEnabled }) {
     const currentDay = Math.min(daysSinceStart + 1, duration);
     const dayNumber = dayIndex + 1;
 
-    // Sadece bugünkü gün değiştirilebilir
-    if (dayNumber !== currentDay || daysSinceStart >= duration) return;
+    // Sadece bugünkü gün değiştirilebilir (developerMode açıksa kısıt kalkar)
+    if (!developerMode) {
+      if (dayNumber !== currentDay || daysSinceStart >= duration) return;
+    }
 
     const newProgress = [
       ...(badHabit.monthlyProgress || Array(duration).fill(null)),
@@ -342,7 +344,7 @@ function HMinus({ soundEnabled }) {
   return (
     <div className="h-minus-container">
       <div className="h-minus-header">
-        <h1>🚫 H- (HABIT MINUS)</h1>
+        <h1 onClick={onHeaderClick}>🚫 H- (HABIT MINUS)</h1>
         <p>Bırakmak istediğin kötü alışkanlıkları takip et!</p>
       </div>
 
@@ -531,14 +533,14 @@ function HMinus({ soundEnabled }) {
                     {getProgressDisplay(badHabit).label}
                   </div>
                 </div>
-                <div className="streak-info">
-                  🔥 {badHabit.currentStreak || 0}
-                  {badHabit.monthsCompleted > 0 && (
-                    <span className={`months-completed ${getDiamondClass(badHabit.monthsCompleted)}`}>
-                      💎{badHabit.monthsCompleted}
-                    </span>
-                  )}
-                </div>
+             <div className="streak-info">
+               🔥 {badHabit.currentStreak || 0}
+               {badHabit.monthsCompleted > 0 && (
+                 <span className={`months-completed ${getDiamondClass(badHabit.monthsCompleted)}`}>
+                   💎{badHabit.monthsCompleted}
+                 </span>
+               )}
+             </div>
               </div>
             </div>
 

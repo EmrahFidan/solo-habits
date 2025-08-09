@@ -11,9 +11,9 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import "./Tatakae.css";
-import "./SettingsStyles.css";
+// import "./SettingsStyles.css"; // removed unused shared styles
 
-function Tatakae({ soundEnabled }) {
+function Tatakae({ soundEnabled, developerMode = false, onHeaderClick }) {
   const [challenges, setChallenges] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [newChallenge, setNewChallenge] = useState({
@@ -27,8 +27,7 @@ function Tatakae({ soundEnabled }) {
   const [showConfirm, setShowConfirm] = useState(null);
   const [showDescription, setShowDescription] = useState(null);
   const [updatedDescription, setUpdatedDescription] = useState("");
-  const [showStackModal, setShowStackModal] = useState(false);
-  const [stackTriggers, setStackTriggers] = useState({});
+  // Stack chain özelliği kaldırıldı
 
   // 🎊 ANIMATED CELEBRATIONS STATE
   const [confetti, setConfetti] = useState([]);
@@ -291,7 +290,7 @@ function Tatakae({ soundEnabled }) {
         isPast,
         isFuture,
         isMissed,
-        canToggle: isCurrent && !isPast,
+        canToggle: developerMode || isCurrent,
       };
     });
   };
@@ -338,7 +337,9 @@ function Tatakae({ soundEnabled }) {
     const currentDay = Math.min(daysSinceStart + 1, duration);
     const dayNumber = dayIndex + 1;
 
-    if (dayNumber !== currentDay || daysSinceStart >= duration) return;
+    if (!developerMode) {
+      if (dayNumber !== currentDay || daysSinceStart >= duration) return;
+    }
 
     const newProgress = [
       ...(challenge.monthlyProgress || Array(duration).fill(false)),
@@ -429,29 +430,7 @@ function Tatakae({ soundEnabled }) {
     setUpdatedDescription("");
   };
 
-  const updateStackTriggers = async () => {
-    const updatePromises = Object.entries(stackTriggers).map(([challengeId, trigger]) => {
-      if (trigger.trim()) {
-        return updateDoc(doc(db, "tatakae", challengeId), {
-          stackTrigger: trigger.trim(),
-        });
-      }
-      return null;
-    }).filter(Boolean);
-
-    await Promise.all(updatePromises);
-    setShowStackModal(false);
-    setStackTriggers({});
-  };
-
-  const openStackModal = () => {
-    const triggers = {};
-    challenges.forEach(challenge => {
-      triggers[challenge.id] = challenge.stackTrigger || "";
-    });
-    setStackTriggers(triggers);
-    setShowStackModal(true);
-  };
+  // Stack chain fonksiyonları kaldırıldı
 
   const getCompletionPercentage = (challenge) => {
     const completed = challenge.completedDays || 0;
@@ -580,16 +559,13 @@ function Tatakae({ soundEnabled }) {
       )}
 
       <div className="tatakae-header">
-        <h1 style={{color: '#00d084', background: 'none', WebkitTextFillColor: '#00d084'}}>⚔️ TATAKAE </h1>
+        <h1 onClick={onHeaderClick} style={{color: '#00d084', background: 'none', WebkitTextFillColor: '#00d084'}}>⚔️ TATAKAE </h1>
         <p>Hayatında yeni bir şey dene ve deneyimle!</p>
       </div>
 
       <div className="tatakae-buttons">
         <button className="tatakae-add-challenge-btn" onClick={() => setShowForm(true)}>
           <span>+</span> Yeni Challenge Başlat
-        </button>
-        <button className="tatakae-stack-chain-btn" onClick={openStackModal}>
-          <span>⛓️</span> Alışkanlık Zinciri Kur
         </button>
       </div>
 
@@ -716,11 +692,6 @@ function Tatakae({ soundEnabled }) {
                   <span className="challenge-status">
                     {getChallengeStatus(challenge)}
                   </span>
-                  {challenge.stackTrigger && (
-                    <span className="stack-trigger">
-                      🔗 {challenge.stackTrigger} → {challenge.name}
-                    </span>
-                  )}
                   {challenge.bundlePartner && (
                     <span className="bundle-partner">
                       🎁 {challenge.name} + {challenge.bundlePartner}
@@ -887,66 +858,7 @@ function Tatakae({ soundEnabled }) {
         </div>
       )}
 
-      {showStackModal && (
-        <div className="modal-overlay" onClick={() => setShowStackModal(false)}>
-          <div className="stack-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>⛓️ Alışkanlık Zinciri Kur</h3>
-            <p style={{
-              textAlign: "center",
-              color: "rgba(204, 201, 220, 0.7)",
-              fontSize: "14px",
-              marginBottom: "20px"
-            }}>
-              Mevcut alışkanlıklarınızı bir tetikleyiciye bağlayın!
-            </p>
-
-            <div className="stack-challenges-list">
-              {challenges.filter(c => !isExpired(c)).map((challenge) => (
-                <div key={challenge.id} className="stack-challenge-item">
-                  <div className="stack-challenge-info">
-                    <span className="challenge-icon">{challenge.icon}</span>
-                    <span className="challenge-name">{challenge.name}</span>
-                  </div>
-                  <div className="stack-trigger-input">
-                    <input
-                      type="text"
-                      placeholder="Tetikleyici... (ör: Kahve içtikten sonra, Dişlerimi fırçaladıktan sonra)"
-                      value={stackTriggers[challenge.id] || ""}
-                      onChange={(e) => setStackTriggers({
-                        ...stackTriggers,
-                        [challenge.id]: e.target.value
-                      })}
-                    />
-                    {stackTriggers[challenge.id] && (
-                      <div className="stack-preview">
-                        "{stackTriggers[challenge.id]} → {challenge.name}"
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {challenges.filter(c => !isExpired(c)).length === 0 && (
-              <div className="empty-stack-state">
-                <p>Aktif challenge'ınız bulunmuyor.</p>
-                <p>Önce bir challenge başlatın!</p>
-              </div>
-            )}
-
-            <div className="stack-buttons">
-              <button onClick={() => setShowStackModal(false)}>İptal</button>
-              <button 
-                onClick={updateStackTriggers} 
-                className="tatakae-save-stack-btn"
-                disabled={Object.values(stackTriggers).every(trigger => !trigger?.trim())}
-              >
-                Zincirleri Kaydet
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Stack chain alanı kaldırıldı */}
       
     </div>
   );

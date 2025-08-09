@@ -20,6 +20,21 @@ body {
   color: #ccc9dc;
 }
 
+.dev-badge {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  z-index: 2000;
+}
+
 /* TAB NAVIGATION */
 .tab-navigation {
   position: fixed;
@@ -85,23 +100,18 @@ body {
 }
 
 /* TAB COLORS */
-.tab:nth-child(1).active {  /* MAIN */
-  color: #48dbfb;
-  filter: drop-shadow(0 0 10px #48dbfb);
-}
-
-.tab:nth-child(2).active {  /* ITERA - TURUNCU */
+.tab:nth-child(1).active {  /* ITERA - TURUNCU */
   color: #ff9500 !important;
   filter: drop-shadow(0 0 15px #ff9500) !important;
   background-color: rgba(255, 149, 0, 0.1) !important;
 }
 
-.tab:nth-child(3).active {  /* TATAKAE - HAVALİ YEŞİL */
+.tab:nth-child(2).active {  /* TATAKAE - HAVALİ YEŞİL */
   color: #00d084;
   filter: drop-shadow(0 0 15px #00d084);
 }
 
-.tab:nth-child(4).active {  /* H- - HAVALİ KIRMIZI */
+.tab:nth-child(3).active {  /* H- - HAVALİ KIRMIZI */
   color: #ff3838;
   filter: drop-shadow(0 0 15px #ff3838);
 }
@@ -386,27 +396,4 @@ h1::after {
 }
 
 /* TAB COLORS */
-.tab:nth-child(1).active {  /* MAIN */
-  color: #48dbfb;
-  filter: drop-shadow(0 0 10px #48dbfb);
-}
-
-.tab:nth-child(2).active {  /* Itera - MOR */
-  color: #9370DB;
-  filter: drop-shadow(0 0 15px #9370DB);
-}
-
-.tab:nth-child(3).active {  /* TATAKAE - HAVALİ YEŞİL */
-  color: #00d084;
-  filter: drop-shadow(0 0 15px #00d084);
-}
-
-.tab:nth-child(4).active {  /* H- - HAVALİ KIRMIZI */
-  color: #ff3838;
-  filter: drop-shadow(0 0 15px #ff3838);
-}
-
-.tab:nth-child(5).active {  /* SETTINGS - TURUNCU */
-  color: #ff9500;
-  filter: drop-shadow(0 0 12px #ff9500);
-}
+/* override colors later in file removed for old order */

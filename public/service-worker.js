@@ -1,12 +1,11 @@
 /* eslint-disable no-restricted-globals */
 // Service Worker Global Scope
 
-// 🔔 VERSION GÜNCELLE - Production ready v3.0.0 - Optimized
-const CACHE_NAME = 'solo-leveling-v7-fixed';
+// 🔔 VERSION GÜNCELLE - v8: do NOT cache index.html to avoid stale asset 404s
+const CACHE_NAME = 'solo-leveling-v8-no-index-cache';
 
-// Cache edilecek dosyalar - Fixed list
+// Cache edilecek dosyalar - Fixed list (index.html hariç)
 const urlsToCache = [
-  '/',
   '/manifest.json',  
   '/icon-192.png',
   '/icon-512.png'
@@ -135,6 +134,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // HTML navigation isteklerinde her zaman network-first kullan
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // İsteğe bağlı: response'u cache'e koymak istersen ekleyebilirsin (offline fallback için)
+          return response;
+        })
+        .catch(async () => {
+          // Network yoksa son çare olarak cache'e bak
+          const cached = await caches.match(event.request);
+          return cached || caches.match('/index.html') || Response.error();
+        })
+    );
+    return;
+  }
+  
   // Development modunda cache'i bypass et
   if (event.request.url.includes('localhost') || event.request.url.includes('127.0.0.1')) {
     event.respondWith(
@@ -145,32 +161,17 @@ self.addEventListener('fetch', (event) => {
   }
   
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache'de varsa döndür
-        if (response) {
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-        
-        // Cache'de yoksa network'ten al
-        return fetch(event.request)
-          .then((response) => {
-            // Geçerli response kontrolü
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            // Response'u clone et ve cache'e ekle
-            const responseToCache = response.clone();
-            
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-            
-            return response;
-          });
-      })
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+        return response;
+      });
+    })
   );
 });
 
