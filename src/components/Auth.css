@@ -378,6 +378,14 @@
   width: 20px;
   height: 20px;
   border-radius: 2px;
+  background: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+  font-family: 'Google Sans', sans-serif;
 }
 
 .auth-google-btn:focus {

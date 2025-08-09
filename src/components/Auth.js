@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { auth, db } from '../firebase';
 import { 
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import './Auth.css';
 
 function Auth() {
@@ -46,10 +49,27 @@ function Auth() {
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setSuccess('Giriş başarılı! Hoş geldiniz!');
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+        setSuccess('Giriş başarılı! Hoş geldiniz!');
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        // Firestore'da kullanıcı dokümanı oluştur
+        await setDoc(doc(db, 'users', user.uid), {
+          email: user.email,
+          createdAt: new Date().toISOString(),
+          displayName: user.email.split('@')[0]
+        });
+        
+        setSuccess('Hesap başarıyla oluşturuldu! Hoş geldiniz!');
+      }
     } catch (error) {
       switch (error.code) {
+        case 'auth/invalid-credential':
+          setError('Email veya şifre yanlış. Lütfen kontrol edin.');
+          break;
         case 'auth/user-not-found':
           setError('Bu email adresine kayıtlı kullanıcı bulunamadı');
           break;
@@ -81,6 +101,55 @@ function Auth() {
     setSuccess('');
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Kullanıcı Firestore'da var mı kontrol et
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (!userDoc.exists()) {
+        // Firestore'da kullanıcı profili oluştur
+        await setDoc(doc(db, 'users', user.uid), {
+          email: user.email,
+          displayName: user.displayName || user.email.split('@')[0],
+          photoURL: user.photoURL,
+          createdAt: new Date().toISOString(),
+          provider: 'google'
+        });
+      }
+      
+      setSuccess('Google ile giriş başarılı! Hoş geldiniz!');
+    } catch (error) {
+      console.error('Google giriş hatası:', error);
+      switch (error.code) {
+        case 'auth/popup-closed-by-user':
+          setError('Giriş penceresi kapatıldı. Lütfen tekrar deneyin.');
+          break;
+        case 'auth/popup-blocked':
+          setError('Pop-up engellendi. Lütfen tarayıcı ayarlarını kontrol edin.');
+          break;
+        case 'auth/cancelled-popup-request':
+          setError('Giriş işlemi iptal edildi.');
+          break;
+        default:
+          setError('Google ile giriş yapılamadı. Lütfen tekrar deneyin.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleModeSwitch = () => {
     setIsLogin(!isLogin);
     clearMessages();
@@ -96,9 +165,9 @@ function Auth() {
           <span className="auth-logo-icon">🌟</span>
           <span className="auth-logo-text">Solo Habits</span>
         </div>
-        <h2>Hoş Geldiniz!</h2>
+        <h2>{isLogin ? 'Hoş Geldiniz!' : 'Hesap Oluşturun'}</h2>
         <p className="auth-subtitle">
-          Alışkanlık yolculuğunuza devam edin
+          {isLogin ? 'Alışkanlık yolculuğunuza devam edin' : 'Yeni alışkanlık yolculuğunuza başlayın'}
         </p>
       </div>
 
@@ -170,13 +239,33 @@ function Auth() {
         </button>
       </form>
 
-      {/* Google login kaldırıldı */}
+      {/* Google Login */}
+      <div className="auth-divider">
+        <span className="auth-divider-text">veya</span>
+      </div>
 
-      {/* Divider kaldırıldı */}
+      <button 
+        type="button" 
+        className="auth-google-btn"
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <>
+            <span className="auth-loading-spinner"></span>
+            Google ile giriş yapılıyor...
+          </>
+        ) : (
+          <>
+            <span className="auth-google-icon">G</span>
+            Google ile {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+          </>
+        )}
+      </button>
 
       <div className="auth-switch">
         <p>
-          Henüz hesabınız yok mu?
+          {isLogin ? 'Henüz hesabınız yok mu?' : 'Zaten hesabınız var mı?'}
         </p>
         <button 
           type="button" 
@@ -184,7 +273,7 @@ function Auth() {
           onClick={handleModeSwitch}
           disabled={isLoading}
         >
-          Kayıt Ol (devre dışı)
+          {isLogin ? 'Kayıt Ol' : 'Giriş Yap'}
         </button>
       </div>
 
