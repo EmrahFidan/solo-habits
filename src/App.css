@@ -205,117 +205,9 @@ h1::after {
   margin-top: 20px;
 }
 
-/* TELEFON (5.5 inç ~ 414px genişlik) */
-@media screen and (max-width: 480px) {
-  .tab-navigation {
-    padding: 12px 16px 16px 16px;
-  }
+/* Responsive styles moved to `src/styles/responsive.css` */
 
-  .tab {
-    padding: 8px 12px;
-    min-width: 60px;
-    min-height: 48px;
-    margin: 0;
-  }
-
-  .tab-icon {
-    font-size: 20px;
-    margin-bottom: 4px;
-  }
-
-  .tab-name {
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .content {
-    padding: 16px 12px;
-    padding-bottom: 85px;
-  }
-
-  .dashboard {
-    padding-top: 24px;
-  }
-
-  .rank-circle {
-    width: 64px;
-    height: 64px;
-    font-size: 24px;
-  }
-
-  .user-name {
-    font-size: 20px;
-    font-weight: 600;
-  }
-
-  h1 {
-    font-size: 28px;
-    margin-top: 24px;
-    line-height: 1.2;
-  }
-
-  .user-profile {
-    gap: 16px;
-  }
-}
-
-/* TABLET (11 inç ~ 768px-1024px genişlik) */
-@media screen and (min-width: 481px) and (max-width: 1024px) {
-  .tab-navigation {
-    padding: 16px 24px 20px 24px;
-  }
-
-  .tab {
-    padding: 12px 16px;
-    min-width: 80px;
-    min-height: 52px;
-    margin: 0;
-  }
-
-  .tab-icon {
-    font-size: 22px;
-    margin-bottom: 4px;
-  }
-
-  .tab-name {
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .content {
-    padding: 24px 20px;
-    padding-bottom: 90px;
-    max-width: 720px;
-    margin: 0 auto;
-  }
-
-  .dashboard {
-    padding-top: 32px;
-  }
-
-  .rank-circle {
-    width: 72px;
-    height: 72px;
-    font-size: 28px;
-  }
-
-  .user-name {
-    font-size: 24px;
-    font-weight: 600;
-  }
-
-  h1 {
-    font-size: 32px;
-    margin-top: 32px;
-    line-height: 1.2;
-  }
-
-  .user-profile {
-    gap: 20px;
-  }
-}
-
-/* PC (16 inç ~ 1025px üzeri genişlik) */
+/* Desktop navigation styling (restore preferred look) */
 @media screen and (min-width: 1025px) {
   .tab-navigation {
     padding: 20px;
@@ -336,11 +228,10 @@ h1::after {
     transition: all 0.3s ease;
   }
 
-    .tab:hover {
+  .tab:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    color: #9370DB;
   }
 
   .tab.active {
@@ -359,41 +250,4 @@ h1::after {
     font-weight: 600;
     letter-spacing: 0.5px;
   }
-
-  .content {
-    padding: 32px 40px;
-    padding-bottom: 100px;
-    max-width: none;
-    margin: 0;
-    width: 100%;
-  }
-
-  .dashboard {
-    padding-top: 32px;
-  }
-
-  .rank-circle {
-    width: 100px;
-    height: 100px;
-    font-size: 42px;
-  }
-
-  .user-name {
-    font-size: 32px;
-    font-weight: 600;
-  }
-
-  h1 {
-    font-size: 48px;
-    margin-top: 32px;
-    line-height: 1.1;
-    font-weight: 700;
-  }
-
-  .user-profile {
-    gap: 32px;
-  }
 }
-
-/* TAB COLORS */
-/* override colors later in file removed for old order */

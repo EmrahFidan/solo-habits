@@ -1,4 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { 
+  getDaysSinceStart as getDaysSinceStartUtil,
+  formatDateYmd as formatDateYmdUtil,
+  getProgressClass as getProgressClassUtil,
+  getDiamondClass as getDiamondClassUtil
+} from "../utils/habits";
 import { db, auth } from "../firebase";
 import {
   collection,
@@ -88,6 +94,37 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
 
     useEffect(() => {
     if (!auth.currentUser) return;
+
+    const getDaysSinceStartLocal = (startDate) => {
+      if (!startDate) return 0;
+      const start = new Date(startDate + "T00:00:00");
+      const today = new Date();
+      start.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      const diffTime = today - start;
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    const formatDateYmdLocal = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const getCycleInfoLocal = (challenge) => {
+      const duration = challenge.duration || 30;
+      const daysSinceStart = getDaysSinceStartLocal(challenge.startDate);
+      const cycleIndex = daysSinceStart % duration;
+      const cycleStartDate = new Date(challenge.startDate + "T00:00:00");
+      cycleStartDate.setHours(0, 0, 0, 0);
+      cycleStartDate.setDate(
+        cycleStartDate.getDate() + (daysSinceStart - cycleIndex)
+      );
+      const cycleStartString = formatDateYmdLocal(cycleStartDate);
+      return { cycleIndex, cycleStartDate, cycleStartString };
+    };
+
     const q = query(
       collection(db, "itera"),
       where("userId", "==", auth.currentUser.uid)
@@ -104,14 +141,38 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
         return dateB - dateA;
       });
 
-      const active = allChallenges.filter(
-        (c) => getDaysSinceStart(c.startDate) < (c.duration || 30)
-      );
+      // Keep weekly recurring challenges always visible; others only while active
+      const filtered = allChallenges.filter((challenge) => {
+        const duration = challenge.duration || 30;
+        const isWeekly = challenge.repeat === "weekly" || duration === 7;
+        if (isWeekly) return true;
+        return getDaysSinceStartLocal(challenge.startDate) < duration;
+      });
 
-      setChallenges(active);
+      // Auto-reset weekly challenges at the start of each new cycle
+      filtered.forEach((challenge) => {
+        const duration = challenge.duration || 30;
+        const isWeekly = challenge.repeat === "weekly" || duration === 7;
+        if (!isWeekly) return;
+
+        const { cycleStartString } = getCycleInfoLocal(challenge);
+        if (challenge.currentCycleStart !== cycleStartString) {
+          // Reset progress for the new week
+          updateDoc(doc(db, "itera", challenge.id), {
+            monthlyProgress: Array(duration).fill(false),
+            completedDays: 0,
+            consecutiveMissed: 0,
+            recoveryMode: false,
+            currentCycleStart: cycleStartString,
+            lastUpdated: new Date(),
+          });
+        }
+      });
+
+      setChallenges(filtered);
     });
     return unsubscribe;
-  }, [auth.currentUser]);
+  }, []);
 
   const createConfetti = useCallback(() => {
     const newConfetti = [];
@@ -196,28 +257,41 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
 
   
 
-  const getDaysSinceStart = (startDate) => {
-    if (!startDate) return 0;
+  const getDaysSinceStart = useCallback((startDate) => getDaysSinceStartUtil(startDate), []);
 
-    const start = new Date(startDate + "T00:00:00");
-    const today = new Date();
+  const isWeeklyRecurring = useCallback((challenge) => {
+    const duration = challenge.duration || 30;
+    return challenge.repeat === "weekly" || duration === 7;
+  }, []);
 
-    start.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
+  const formatDateYmd = (date) => formatDateYmdUtil(date);
 
-    const diffTime = today - start;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    return Math.max(0, diffDays);
-  };
+  const getCycleInfo = useCallback((challenge) => {
+    const duration = challenge.duration || 30;
+    const daysSinceStart = getDaysSinceStart(challenge.startDate);
+    const cycleIndex = daysSinceStart % duration;
+    const cycleStartDate = new Date(challenge.startDate + "T00:00:00");
+    cycleStartDate.setHours(0, 0, 0, 0);
+    cycleStartDate.setDate(cycleStartDate.getDate() + (daysSinceStart - cycleIndex));
+    const cycleStartString = formatDateYmd(cycleStartDate);
+    return { cycleIndex, cycleStartDate, cycleStartString };
+  }, [getDaysSinceStart]);
 
   const getProgressBoxes = (challenge) => {
-    const daysSinceStart = getDaysSinceStart(challenge.startDate);
     const duration = challenge.duration || 30;
-    const currentDay = Math.min(daysSinceStart + 1, duration);
     const progress = challenge.monthlyProgress || Array(duration).fill(false);
 
-    const startDate = new Date(challenge.startDate + "T00:00:00");
+    const weekly = isWeeklyRecurring(challenge);
+    const { cycleIndex, cycleStartDate } = weekly
+      ? getCycleInfo(challenge)
+      : { cycleIndex: null, cycleStartDate: new Date(challenge.startDate + "T00:00:00") };
+
+    const daysSinceStart = getDaysSinceStart(challenge.startDate);
+    const currentDay = weekly
+      ? cycleIndex + 1
+      : Math.min(daysSinceStart + 1, duration);
+
+    const startDate = cycleStartDate;
     const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
     const selectedDays = challenge.selectedDays || [0, 1, 2, 3, 4, 5, 6]; // Tüm günler default
 
@@ -234,7 +308,7 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
       }
       
       const isCompleted = progress[index];
-      const isCurrent = dayNumber === currentDay && daysSinceStart < duration;
+      const isCurrent = dayNumber === currentDay;
       const isPast = dayNumber < currentDay;
       const isFuture = dayNumber > currentDay;
       const isMissed = isPast && !isCompleted;
@@ -271,7 +345,10 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
       const startDate = `${year}-${month}-${day}`;
 
       const duration = newChallenge.duration;
-      
+      const isWeekly = duration === 7;
+      const cycleStartDate = new Date(startDate + "T00:00:00");
+      const cycleStartString = formatDateYmd(cycleStartDate);
+
       await addDoc(collection(db, "itera"), {
         ...newChallenge,
         startDate: startDate,
@@ -282,6 +359,8 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
         missedDays: 0,
         consecutiveMissed: 0,
         recoveryMode: false,
+        repeat: isWeekly ? "weekly" : undefined,
+        currentCycleStart: isWeekly ? cycleStartString : undefined,
         createdAt: new Date(),
       });
     } catch (error) {
@@ -307,11 +386,18 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
   const toggleDay = async (challenge, dayIndex) => {
     const daysSinceStart = getDaysSinceStart(challenge.startDate);
     const duration = challenge.duration || 30;
-    const currentDay = Math.min(daysSinceStart + 1, duration);
+    const isWeekly = isWeeklyRecurring(challenge);
+    const currentDay = isWeekly
+      ? getCycleInfo(challenge).cycleIndex + 1
+      : Math.min(daysSinceStart + 1, duration);
     const dayNumber = dayIndex + 1;
 
     if (!developerMode) {
-      if (dayNumber !== currentDay || daysSinceStart >= duration) return;
+      if (isWeekly) {
+        if (dayNumber !== currentDay) return;
+      } else {
+        if (dayNumber !== currentDay || daysSinceStart >= duration) return;
+      }
     }
 
     const newProgress = [
@@ -411,19 +497,15 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
     return Math.round((completed / duration) * 100);
   };
 
-  const getProgressClass = (percentage) => {
-    let classes = "visual-progress-bar";
-    if (percentage >= 25 && percentage < 50) classes += " milestone-25";
-    if (percentage >= 50 && percentage < 75) classes += " milestone-50";
-    if (percentage >= 75 && percentage < 95) classes += " milestone-75 glow";
-    if (percentage >= 95) classes += " milestone-100 glow pulse";
-    return classes;
-  };
+  const getProgressClass = (percentage) => getProgressClassUtil(percentage);
 
   const getChallengeStatus = (challenge) => {
     const daysSinceStart = getDaysSinceStart(challenge.startDate);
     const duration = challenge.duration || 30;
-
+    if (isWeeklyRecurring(challenge)) {
+      const { cycleIndex } = getCycleInfo(challenge);
+      return `Haftalık - ${cycleIndex + 1}. Gün`;
+    }
     if (daysSinceStart >= duration) return "Tamamlandı";
     if (daysSinceStart < 0) return "Başlamadı";
 
@@ -436,15 +518,11 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
 
   const isExpired = (challenge) => {
     const duration = challenge.duration || 30;
+    if (isWeeklyRecurring(challenge)) return false;
     return getDaysSinceStart(challenge.startDate) >= duration;
   };
 
-  const getDiamondClass = (monthsCompleted) => {
-    if (monthsCompleted >= 6) return "diamond-legendary"; // 6+ Altın
-    if (monthsCompleted >= 4) return "diamond-master"; // 4-5 Kırmızı
-    if (monthsCompleted >= 2) return "diamond-advanced"; // 2-3 Mor
-    return "diamond-basic"; // 1 Mavi
-  };
+  const getDiamondClass = (monthsCompleted) => getDiamondClassUtil(monthsCompleted);
 
   return (
     <div className={`itera-container ${screenShake ? "screen-shake" : ""}`}>
@@ -722,9 +800,7 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
                     </span>
                   )}
                   {challenge.bundlePartner && (
-                    <span className="bundle-partner">
-                      🎁 {challenge.name} + {challenge.bundlePartner}
-                    </span>
+                    <span className="bundle-partner">🎁 {challenge.bundlePartner}</span>
                   )}
                 </div>
               </div>

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
-import { auth, db } from "./firebase";
+import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import Auth from "./components/Auth";
 import Tatakae from "./components/Tatakae";
 import HMinus from "./components/HMinus";
@@ -12,8 +11,6 @@ import Itera from "./components/Itera";
 function App() {
   const [activeTab, setActiveTab] = useState(0);
   const [user, setUser] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(false); // no loading animation, show immediately
   const [developerMode, setDeveloperMode] = useState(false);
   const [headerClickCount, setHeaderClickCount] = useState(0);
 
@@ -26,24 +23,10 @@ function App() {
       if (user) {
         console.log("✅ User ID:", user.uid);
         setUser(user);
-        try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-          console.log("📄 User data yüklendi");
-          const userData = userDoc.data();
-          setUserData(userData);
-          } else {
-            console.log("❌ User document bulunamadı");
-          }
-        } catch (error) {
-          console.error("🚨 Firestore hatası:", error);
-        }
       } else {
       setUser(null);
-      setUserData(null);
       }
       
-      setLoading(false);
     });
     
     return unsubscribe;

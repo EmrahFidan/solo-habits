@@ -127,53 +127,7 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// FETCH EVENT LISTENER
-self.addEventListener('fetch', (event) => {
-  // Sadece GET istekleri için cache kontrol et
-  if (event.request.method !== 'GET') {
-    return;
-  }
-  
-  // HTML navigation isteklerinde her zaman network-first kullan
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // İsteğe bağlı: response'u cache'e koymak istersen ekleyebilirsin (offline fallback için)
-          return response;
-        })
-        .catch(async () => {
-          // Network yoksa son çare olarak cache'e bak
-          const cached = await caches.match(event.request);
-          return cached || caches.match('/index.html') || Response.error();
-        })
-    );
-    return;
-  }
-  
-  // Development modunda cache'i bypass et
-  if (event.request.url.includes('localhost') || event.request.url.includes('127.0.0.1')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-  
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-        return response;
-      });
-    })
-  );
-});
+// FETCH EVENT LISTENER (performance monitored)
 
 // Background Sync (Opsiyonel)
 self.addEventListener('sync', (event) => {

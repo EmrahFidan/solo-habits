@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { 
+  getDaysSinceStart as getDaysSinceStartUtil,
+  getProgressClass as getProgressClassUtil,
+  getDiamondClass as getDiamondClassUtil
+} from "../utils/habits";
 import { db, auth } from "../firebase";
 import {
   collection,
@@ -246,20 +251,7 @@ function Tatakae({ soundEnabled, developerMode = false, onHeaderClick }) {
     return () => clearInterval(interval);
   }, [checkDailyPenalties]);
 
-  const getDaysSinceStart = (startDate) => {
-    if (!startDate) return 0;
-
-    const start = new Date(startDate + "T00:00:00");
-    const today = new Date();
-
-    start.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-
-    const diffTime = today - start;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    return Math.max(0, diffDays);
-  };
+  const getDaysSinceStart = (startDate) => getDaysSinceStartUtil(startDate);
 
   const getProgressBoxes = (challenge) => {
     const daysSinceStart = getDaysSinceStart(challenge.startDate);
@@ -438,14 +430,7 @@ function Tatakae({ soundEnabled, developerMode = false, onHeaderClick }) {
     return Math.round((completed / duration) * 100);
   };
 
-  const getProgressClass = (percentage) => {
-    let classes = "visual-progress-bar";
-    if (percentage >= 25 && percentage < 50) classes += " milestone-25";
-    if (percentage >= 50 && percentage < 75) classes += " milestone-50";
-    if (percentage >= 75 && percentage < 95) classes += " milestone-75 glow";
-    if (percentage >= 95) classes += " milestone-100 glow pulse";
-    return classes;
-  };
+  const getProgressClass = (percentage) => getProgressClassUtil(percentage);
 
   const getChallengeStatus = (challenge) => {
     const daysSinceStart = getDaysSinceStart(challenge.startDate);
@@ -466,12 +451,7 @@ function Tatakae({ soundEnabled, developerMode = false, onHeaderClick }) {
     return getDaysSinceStart(challenge.startDate) >= duration;
   };
 
-  const getDiamondClass = (monthsCompleted) => {
-    if (monthsCompleted >= 6) return 'diamond-legendary'; // 6+ Altın
-    if (monthsCompleted >= 4) return 'diamond-master';    // 4-5 Kırmızı
-    if (monthsCompleted >= 2) return 'diamond-advanced';  // 2-3 Mor
-    return 'diamond-basic';                               // 1 Mavi
-  };
+  const getDiamondClass = (monthsCompleted) => getDiamondClassUtil(monthsCompleted);
 
   return (
     <div className={`tatakae-container ${screenShake ? "screen-shake" : ""}`}>
@@ -693,9 +673,7 @@ function Tatakae({ soundEnabled, developerMode = false, onHeaderClick }) {
                     {getChallengeStatus(challenge)}
                   </span>
                   {challenge.bundlePartner && (
-                    <span className="bundle-partner">
-                      🎁 {challenge.name} + {challenge.bundlePartner}
-                    </span>
+                    <span className="bundle-partner">🎁 {challenge.bundlePartner}</span>
                   )}
                 </div>
               </div>
