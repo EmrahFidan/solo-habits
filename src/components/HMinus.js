@@ -329,13 +329,6 @@ function HMinus({ soundEnabled, developerMode = false, onHeaderClick }) {
 
   return (
     <div className="h-minus-container">
-      <div className="h-minus-header">
-        <h1 onClick={onHeaderClick}>🚫 H- (HABIT MINUS)</h1>
-        <p>Bırakmak istediğin kötü alışkanlıkları takip et!</p>
-      </div>
-
-
-
       <div className="h-minus-buttons">
         <button className="hminus-add-bad-habit-btn" onClick={() => setShowForm(true)}>
           <span>+</span> Alışkanlık Ekle

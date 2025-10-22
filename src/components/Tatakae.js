@@ -538,11 +538,6 @@ function Tatakae({ soundEnabled, developerMode = false, onHeaderClick }) {
         </div>
       )}
 
-      <div className="tatakae-header">
-        <h1 onClick={onHeaderClick} style={{color: '#00d084', background: 'none', WebkitTextFillColor: '#00d084'}}>⚔️ TATAKAE </h1>
-        <p>Hayatında yeni bir şey dene ve deneyimle!</p>
-      </div>
-
       <div className="tatakae-buttons">
         <button className="tatakae-add-challenge-btn" onClick={() => setShowForm(true)}>
           <span>+</span> Yeni Challenge Başlat

@@ -35,6 +35,23 @@ body {
   z-index: 2000;
 }
 
+.dev-badge-top-right {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: rgba(255, 152, 0, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+  cursor: default;
+  user-select: none;
+  backdrop-filter: blur(10px);
+}
+
 /* TAB NAVIGATION */
 .tab-navigation {
   position: fixed;

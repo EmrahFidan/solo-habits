@@ -1,0 +1,113 @@
+/* Tabs Container */
+.tabs-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Tabs Header */
+.tabs-header {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  background: rgba(13, 13, 28, 0.95);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Tab Button */
+.tab-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  background: rgba(28, 28, 36, 0.9);
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.tab-button:hover {
+  background: rgba(40, 40, 50, 0.95);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tab-button:last-child {
+  border-right: none;
+}
+
+/* Active Tab */
+.tab-button.active {
+  background: rgba(50, 50, 60, 1);
+  color: var(--tab-color);
+  position: relative;
+}
+
+.tab-button.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--tab-color);
+  box-shadow: 0 0 20px var(--tab-color);
+}
+
+/* Tab Content */
+.tab-content {
+  background: transparent;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+  min-height: calc(100vh - 100px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .tab-button {
+    padding: 20px 12px;
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+
+  .tab-content {
+    padding: 16px;
+  }
+}
+
+/* Very Small Screens */
+@media (max-width: 480px) {
+  .tab-button {
+    padding: 16px 8px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+
+  .tab-content {
+    padding: 12px;
+  }
+}

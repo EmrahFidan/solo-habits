@@ -609,11 +609,6 @@ function Itera({ soundEnabled, developerMode = false, onHeaderClick }) {
         </div>
       )}
 
-      <div className="tatakae-header">
-        <h1 onClick={onHeaderClick} style={{color: '#ff9500', background: 'none', WebkitTextFillColor: '#ff9500'}}>🔄 ITERA</h1>
-        <p>İtera: Tekrarla, Geliştir, Başar - Sürekli İyileştirme Döngüsü</p>
-      </div>
-
       <div className="itera-buttons">
         <button
           className="itera-add-challenge-btn"

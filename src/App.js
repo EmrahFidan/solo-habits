@@ -1,45 +1,50 @@
 import React, { useState, useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
+import "./components/Tabs.css";
 import { auth } from "./firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import Auth from "./components/Auth";
+import { onAuthStateChanged, signInAnonymously } from "firebase/auth";
 import Tatakae from "./components/Tatakae";
 import HMinus from "./components/HMinus";
 import Itera from "./components/Itera";
 
 function App() {
-  const [activeTab, setActiveTab] = useState(0);
+  const [expandedSection, setExpandedSection] = useState("tatakae");
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [developerMode, setDeveloperMode] = useState(false);
   const [headerClickCount, setHeaderClickCount] = useState(0);
 
   useEffect(() => {
     console.log("🔥 Firebase Auth başlatılıyor...");
-    
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log("👤 Auth state değişti:", user ? "Kullanıcı var" : "Kullanıcı yok");
-      
+
       if (user) {
         console.log("✅ User ID:", user.uid);
         setUser(user);
+        setLoading(false);
       } else {
-      setUser(null);
+        // Kullanıcı yoksa otomatik anonymous giriş yap
+        console.log("🔐 Otomatik anonymous giriş yapılıyor...");
+        try {
+          await signInAnonymously(auth);
+          console.log("✅ Anonymous giriş başarılı");
+        } catch (error) {
+          console.error("❌ Anonymous giriş hatası:", error);
+          setLoading(false);
+        }
       }
-      
     });
-    
+
     return unsubscribe;
   }, []);
 
-  const tabs = [
-    { id: 0, name: "ITERA", icon: "🔄" },
-    { id: 1, name: "TATAKAE", icon: "⚔️" },
-    { id: 2, name: "H-", icon: "🚫" },
-  ];
-
-  const handleTabSwitch = (tabId) => {
-    setActiveTab(tabId);
+  const toggleSection = (sectionName) => {
+    setExpandedSection(
+      expandedSection === sectionName ? null : sectionName
+    );
   };
 
   const handleHeaderClick = () => {
@@ -53,13 +58,15 @@ function App() {
     }
   };
 
-  // No loading animation; render immediately
-
-  if (!user) {
+  // Loading state - minimal spinner
+  if (loading) {
     return (
-      <ErrorBoundary>
-        <Auth />
-      </ErrorBoundary>
+      <div className="app" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚔️</div>
+          <div style={{ fontSize: '18px', color: '#667eea' }}>Solo Habits yükleniyor...</div>
+        </div>
+      </div>
     );
   }
 
@@ -67,35 +74,63 @@ function App() {
     <ErrorBoundary userId={user?.uid}>
       <div className="app">
         {developerMode && (
-          <div className="dev-badge" title="Developer Mode aktif">
+          <div className="dev-badge-top-right" title="Developer Mode aktif">
             👨‍💻 DEV MODE
           </div>
         )}
-        <div className="tab-navigation">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`tab ${activeTab === tab.id ? "active" : ""}`}
-              onClick={() => handleTabSwitch(tab.id)}
-            >
-              <span className="tab-icon">{tab.icon}</span>
-              <span className="tab-name">{tab.name}</span>
-            </button>
-          ))}
-        </div>
 
-        <div className="content">
-          <ErrorBoundary userId={user?.uid}>
-            {activeTab === 0 && (
-              <Itera developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+        <div className="tabs-container">
+          <div className="tabs-header">
+            <button
+              className={`tab-button ${expandedSection === "itera" ? "active" : ""}`}
+              onClick={() => toggleSection("itera")}
+              style={{
+                "--tab-color": "#ff9500"
+              }}
+            >
+              ITERA
+            </button>
+
+            <button
+              className={`tab-button ${expandedSection === "hminus" ? "active" : ""}`}
+              onClick={() => toggleSection("hminus")}
+              style={{
+                "--tab-color": "#ff6b6b"
+              }}
+            >
+              H-
+            </button>
+
+            <button
+              className={`tab-button ${expandedSection === "tatakae" ? "active" : ""}`}
+              onClick={() => toggleSection("tatakae")}
+              style={{
+                "--tab-color": "#00d084"
+              }}
+            >
+              TATAKAE
+            </button>
+          </div>
+
+          <div className="tab-content">
+            {expandedSection === "itera" && (
+              <ErrorBoundary userId={user?.uid}>
+                <Itera developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+              </ErrorBoundary>
             )}
-            {activeTab === 1 && (
-              <Tatakae developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+
+            {expandedSection === "hminus" && (
+              <ErrorBoundary userId={user?.uid}>
+                <HMinus developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+              </ErrorBoundary>
             )}
-            {activeTab === 2 && (
-              <HMinus developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+
+            {expandedSection === "tatakae" && (
+              <ErrorBoundary userId={user?.uid}>
+                <Tatakae developerMode={developerMode} onHeaderClick={handleHeaderClick} />
+              </ErrorBoundary>
             )}
-          </ErrorBoundary>
+          </div>
         </div>
       </div>
     </ErrorBoundary>
